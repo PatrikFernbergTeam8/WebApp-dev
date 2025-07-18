@@ -5,38 +5,9 @@ import {
   Button,
   Typography,
 } from "@material-tailwind/react";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import authService from "../../services/authService";
-
+import { Link } from "react-router-dom";
 
 export function SignUp() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const result = await authService.register(email, password);
-      
-      if (result.success) {
-        navigate('/dashboard/home');
-      } else {
-        setError(result.error);
-      }
-    } catch (err) {
-      setError('Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <section className="m-8 flex">
             <div className="w-2/5 h-full hidden lg:block">
@@ -50,7 +21,7 @@ export function SignUp() {
           <Typography variant="h2" className="font-bold mb-4">Join Us Today</Typography>
           <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">Enter your email and password to register.</Typography>
         </div>
-        <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2" onSubmit={handleSubmit}>
+        <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
           <div className="mb-1 flex flex-col gap-6">
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
               Your email
@@ -62,9 +33,6 @@ export function SignUp() {
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
             />
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
               Password
@@ -77,9 +45,6 @@ export function SignUp() {
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
             />
           </div>
           <Checkbox
@@ -100,13 +65,8 @@ export function SignUp() {
             }
             containerProps={{ className: "-ml-2.5" }}
           />
-          {error && (
-            <Typography color="red" className="text-center mt-4">
-              {error}
-            </Typography>
-          )}
-          <Button className="mt-6" fullWidth type="submit" disabled={isLoading}>
-            {isLoading ? 'Registering...' : 'Register Now'}
+          <Button className="mt-6" fullWidth>
+            Register Now
           </Button>
 
           <Typography variant="paragraph" className="text-center text-blue-gray-500 font-medium mt-4">
