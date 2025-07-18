@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://team8-auth-functions-b3eab2a2g8cxdaax.swedencentral-01.azurewebsites.net/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://team8-auth-v3-dhh7faahf6cwbqc9.swedencentral-01.azurewebsites.net/api';
 
 class AuthService {
   constructor() {
