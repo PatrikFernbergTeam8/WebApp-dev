@@ -4,19 +4,5 @@
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "api/auth/login.js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/auth/register.js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/auth/me.js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/health.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  ]
 }
