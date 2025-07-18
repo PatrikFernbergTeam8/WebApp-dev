@@ -1,15 +1,7 @@
-// Azure SQL registration using REST API approach
-const crypto = require('crypto');
+// Simple registration for Vercel Functions (no external dependencies)
+import crypto from 'crypto';
 
-// Database connection details
-const DB_CONFIG = {
-  server: 'team8-webbapp-server.database.windows.net',
-  database: 'Team8-Webapp-db',
-  user: 'webapp-admin',
-  password: 'VfsaD.P47P_pa@gKZMZM'
-};
-
-// Simple password hashing (for production, use bcrypt)
+// Simple password hashing using built-in crypto
 function hashPassword(password, salt) {
   return crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
 }
@@ -22,39 +14,8 @@ function createSimpleToken(payload) {
   return `${encodedHeader}.${encodedPayload}.`;
 }
 
-// Execute SQL using fetch to Azure SQL REST API
-async function executeSQL(query, params = []) {
-  const sql = require('mssql');
-  
-  try {
-    await sql.connect({
-      server: DB_CONFIG.server,
-      database: DB_CONFIG.database,
-      user: DB_CONFIG.user,
-      password: DB_CONFIG.password,
-      options: {
-        encrypt: true,
-        enableArithAbort: true,
-        trustServerCertificate: false
-      }
-    });
-
-    const request = new sql.Request();
-    
-    // Add parameters
-    params.forEach(param => {
-      request.input(param.name, param.type, param.value);
-    });
-
-    const result = await request.query(query);
-    await sql.close();
-    
-    return result;
-  } catch (error) {
-    await sql.close();
-    throw error;
-  }
-}
+// Temporary in-memory storage (for testing - replace with database)
+const users = new Map();
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -82,59 +43,27 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Check if user already exists
-    const checkUserQuery = 'SELECT id FROM Users WHERE email = @email';
-    const checkParams = [
-      { name: 'email', type: 'NVarChar', value: email }
-    ];
-
-    try {
-      const existingUser = await executeSQL(checkUserQuery, checkParams);
-      
-      if (existingUser.recordset.length > 0) {
-        return res.status(400).json({ error: 'User already exists with this email' });
-      }
-    } catch (dbError) {
-      console.error('Database check error:', dbError);
-      // Fallback to simple registration if database fails
-      const newUser = {
-        id: Math.floor(Math.random() * 1000000),
-        email: email
-      };
-
-      const tokenPayload = { 
-        userId: newUser.id, 
-        email: newUser.email, 
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
-      };
-      const token = createSimpleToken(tokenPayload);
-
-      return res.status(201).json({
-        message: 'User created successfully (fallback mode)',
-        token,
-        user: { id: newUser.id, email: newUser.email }
-      });
+    // Check if user already exists in memory storage
+    if (users.has(email)) {
+      return res.status(400).json({ error: 'User already exists with this email' });
     }
 
     // Hash password
     const salt = crypto.randomBytes(32).toString('hex');
     const hashedPassword = hashPassword(password, salt);
 
-    // Insert user
-    const insertQuery = `
-      INSERT INTO Users (email, password_hash, salt, created_at, updated_at) 
-      VALUES (@email, @password_hash, @salt, GETDATE(), GETDATE());
-      SELECT SCOPE_IDENTITY() as id;
-    `;
-    
-    const insertParams = [
-      { name: 'email', type: 'NVarChar', value: email },
-      { name: 'password_hash', type: 'NVarChar', value: hashedPassword },
-      { name: 'salt', type: 'NVarChar', value: salt }
-    ];
+    // Create user
+    const userId = Math.floor(Math.random() * 1000000);
+    const newUser = {
+      id: userId,
+      email: email,
+      password_hash: hashedPassword,
+      salt: salt,
+      created_at: new Date().toISOString()
+    };
 
-    const result = await executeSQL(insertQuery, insertParams);
-    const userId = result.recordset[0].id;
+    // Store user in memory (temporary solution)
+    users.set(email, newUser);
 
     // Generate token
     const tokenPayload = { 

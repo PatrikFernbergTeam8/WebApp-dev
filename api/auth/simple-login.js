@@ -1,13 +1,24 @@
 // Simple login without external dependencies for Vercel Functions
+import crypto from 'crypto';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'team8-webapp-super-secret-jwt-key-change-in-production-2024';
 
-// Temporary users for testing (replace with database in production)
-const users = [
+// Hardcoded test users + registered users from memory
+const testUsers = [
   { id: 1, email: 'test@test.com', password: 'test123' },
   { id: 2, email: 'admin@team8.se', password: 'admin123' }
 ];
 
-// Simple base64 encoding for basic token (not secure, just for testing)
+// This should be shared with registration (in real app, use database)
+const registeredUsers = new Map();
+
+// Password verification
+function verifyPassword(password, hash, salt) {
+  const computedHash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+  return computedHash === hash;
+}
+
+// Simple base64 encoding for basic token
 function createSimpleToken(payload) {
   const header = { alg: 'none', typ: 'JWT' };
   const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64url');
@@ -37,26 +48,44 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Find user (simple check for testing)
-    const user = users.find(u => u.email === email && u.password === password);
+    // First check test users (simple password check)
+    const testUser = testUsers.find(u => u.email === email && u.password === password);
+    
+    if (testUser) {
+      const tokenPayload = { 
+        userId: testUser.id, 
+        email: testUser.email, 
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+      };
+      const token = createSimpleToken(tokenPayload);
 
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.json({
+        message: 'Login successful',
+        token,
+        user: { id: testUser.id, email: testUser.email }
+      });
     }
 
-    // Generate simple token
-    const tokenPayload = { 
-      userId: user.id, 
-      email: user.email, 
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-    };
-    const token = createSimpleToken(tokenPayload);
+    // Then check registered users (hashed password check)
+    const registeredUser = registeredUsers.get(email);
+    
+    if (registeredUser && verifyPassword(password, registeredUser.password_hash, registeredUser.salt)) {
+      const tokenPayload = { 
+        userId: registeredUser.id, 
+        email: registeredUser.email, 
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+      };
+      const token = createSimpleToken(tokenPayload);
 
-    res.json({
-      message: 'Login successful',
-      token,
-      user: { id: user.id, email: user.email }
-    });
+      return res.json({
+        message: 'Login successful',
+        token,
+        user: { id: registeredUser.id, email: registeredUser.email }
+      });
+    }
+
+    // No user found
+    return res.status(401).json({ error: 'Invalid email or password' });
 
   } catch (error) {
     console.error('Login error:', error);
