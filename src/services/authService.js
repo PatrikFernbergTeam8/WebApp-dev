@@ -28,7 +28,7 @@ class AuthService {
   // Register new user
   async register(email, password) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/simple-register`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
