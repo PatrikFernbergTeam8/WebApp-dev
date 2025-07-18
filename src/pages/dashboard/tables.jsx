@@ -17,20 +17,18 @@ import React, { useState, useEffect } from "react";
 import { StatisticsCard } from "@/widgets/cards";
 
 // Import Google Sheets hook
-import { useGoogleSheetsData } from "@/services/googleSheets";
+import { useGoogleSheetsData, reservePrinterInSheet, unreservePrinterInSheet } from "@/services/googleSheets";
 
 export function Tables() {
   // Use Google Sheets API - hooks must be called at top level
   const { data: liveData, loading, error, refetch } = useGoogleSheetsData();
   
-  // State for reserved printers with localStorage persistence
-  const [reservedPrinters, setReservedPrinters] = useState(() => {
-    const saved = localStorage.getItem('reservedPrinters');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
   // Use live data if available, otherwise fall back to static data
   const allPrinters = liveData.length > 0 ? liveData : printersInventoryData;
+  
+  // Separate printers based on Reserverad_av column from Google Sheets
+  const availablePrinters = allPrinters.filter(printer => !printer.reservedBy);
+  const reservedPrinters = allPrinters.filter(printer => printer.reservedBy);
   
   // Function to calculate time remaining
   const getTimeRemaining = (reservedAt) => {
@@ -54,59 +52,38 @@ export function Tables() {
     }
   };
   
-  // Auto-expire reservations after 2 weeks
-  useEffect(() => {
-    const checkExpiredReservations = () => {
-      const now = new Date();
-      const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
-      
-      const filteredReservations = reservedPrinters.filter(reserved => {
-        const reservedDate = new Date(reserved.reservedAt);
-        const timeElapsed = now - reservedDate;
-        return timeElapsed < twoWeeksInMs;
-      });
-      
-      // Only update if there are expired reservations
-      if (filteredReservations.length !== reservedPrinters.length) {
-        setReservedPrinters(filteredReservations);
-        localStorage.setItem('reservedPrinters', JSON.stringify(filteredReservations));
+  // Function to reserve a printer by updating Google Sheets
+  const reservePrinter = async (printer) => {
+    try {
+      const success = await reservePrinterInSheet(printer);
+      if (success) {
+        // Refresh data from Google Sheets
+        refetch();
+      } else {
+        console.error('Failed to reserve printer in Google Sheets');
       }
-    };
-    
-    // Check every minute
-    const interval = setInterval(checkExpiredReservations, 60000);
-    
-    // Also check immediately
-    checkExpiredReservations();
-    
-    return () => clearInterval(interval);
-  }, [reservedPrinters]);
-  
-  // Filter out reserved printers from main table
-  const printersData = allPrinters.filter(printer => 
-    !reservedPrinters.some(reserved => 
-      reserved.brand === printer.brand && reserved.model === printer.model
-    )
-  );
-  
-  // Function to reserve a printer
-  const reservePrinter = (printer) => {
-    const newReserved = [...reservedPrinters, { ...printer, reservedAt: new Date().toISOString() }];
-    setReservedPrinters(newReserved);
-    localStorage.setItem('reservedPrinters', JSON.stringify(newReserved));
+    } catch (error) {
+      console.error('Error reserving printer:', error);
+    }
   };
   
-  // Function to unreserve a printer
-  const unreservePrinter = (printer) => {
-    const newReserved = reservedPrinters.filter(reserved => 
-      !(reserved.brand === printer.brand && reserved.model === printer.model)
-    );
-    setReservedPrinters(newReserved);
-    localStorage.setItem('reservedPrinters', JSON.stringify(newReserved));
+  // Function to unreserve a printer by updating Google Sheets
+  const unreservePrinter = async (printer) => {
+    try {
+      const success = await unreservePrinterInSheet(printer);
+      if (success) {
+        // Refresh data from Google Sheets
+        refetch();
+      } else {
+        console.error('Failed to unreserve printer in Google Sheets');
+      }
+    } catch (error) {
+      console.error('Error unreserving printer:', error);
+    }
   };
   
   // Calculate statistics
-  const totalPrinters = printersData.length;
+  const totalPrinters = availablePrinters.length;
   const totalReserved = reservedPrinters.length;
   
   // Calculate total inventory value (all printers regardless of status or reservation)
@@ -123,7 +100,7 @@ export function Tables() {
   // Debug log
   console.log('All printers for value calculation:', allPrinters.length);
   console.log('Reserved printers:', reservedPrinters.length);
-  console.log('Available printers:', printersData.length);
+  console.log('Available printers:', availablePrinters.length);
   console.log('Total value:', totalValue);
   
   // Format value for display
@@ -139,7 +116,7 @@ export function Tables() {
   
   // Debug log to see what data we're getting
   console.log('Live data:', liveData);
-  console.log('Using data:', printersData);
+  console.log('Using available data:', availablePrinters);
   
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
@@ -155,7 +132,7 @@ export function Tables() {
           footer={
             <Typography className="font-normal text-blue-gray-600">
               <strong className="text-green-500">
-                {printersData.filter(p => p.status === 'available').length}
+                {availablePrinters.filter(p => p.status === 'available').length}
               </strong>
               &nbsp;tillgängliga
             </Typography>
@@ -199,11 +176,11 @@ export function Tables() {
             className: "w-6 h-6 text-white",
           })}
           title="Under lagning"
-          value={printersData.filter(p => p.status === 'cancelled').length.toString()}
+          value={allPrinters.filter(p => p.status === 'cancelled').length.toString()}
           footer={
             <Typography className="font-normal text-blue-gray-600">
               <strong className="text-red-500">
-                {printersData.filter(p => p.status === 'pending').length}
+                {allPrinters.filter(p => p.status === 'pending').length}
               </strong>
               &nbsp;inväntar rekond
             </Typography>
@@ -258,10 +235,10 @@ export function Tables() {
               </tr>
             </thead>
             <tbody>
-              {printersData.map(
-                ({ brand, model, status, location, price }, key) => {
+              {availablePrinters.map(
+                ({ brand, model, status, location, price, _rowNumber }, key) => {
                   const className = `py-3 px-5 ${
-                    key === printersData.length - 1
+                    key === availablePrinters.length - 1
                       ? ""
                       : "border-b border-blue-gray-50"
                   }`;
@@ -335,7 +312,7 @@ export function Tables() {
                           variant="gradient"
                           color="blue"
                           size="sm"
-                          onClick={() => reservePrinter({ brand, model, status, location, price })}
+                          onClick={() => reservePrinter({ brand, model, status, location, price, _rowNumber })}
                           className="px-3 py-1"
                         >
                           Reservera
@@ -381,14 +358,16 @@ export function Tables() {
               </thead>
               <tbody>
                 {reservedPrinters.map(
-                  ({ brand, model, status, location, price, reservedAt }, key) => {
+                  ({ brand, model, status, location, price, reservedBy, _rowNumber }, key) => {
                     const className = `py-3 px-5 ${
                       key === reservedPrinters.length - 1
                         ? ""
                         : "border-b border-blue-gray-50"
                     }`;
 
-                    const timeRemaining = getTimeRemaining(reservedAt);
+                    // Parse reservation date from reservedBy text (format: "Reserverad till YYYY-MM-DD")
+                    const reservationDate = reservedBy.includes('till') ? reservedBy.split('till ')[1] : '';
+                    const timeRemaining = reservationDate ? getTimeRemaining(reservationDate) : { expired: false, text: 'Okänt' };
 
                     const getStatusColor = (status) => {
                       switch (status) {
@@ -466,7 +445,7 @@ export function Tables() {
                             variant="outlined"
                             color="red"
                             size="sm"
-                            onClick={() => unreservePrinter({ brand, model, status, location, price })}
+                            onClick={() => unreservePrinter({ brand, model, status, location, price, _rowNumber })}
                             className="px-3 py-1"
                           >
                             Avreservera

@@ -7,14 +7,25 @@ const GID = '1760566905';
 // Google Sheets API key - Add your API key here
 const API_KEY = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY || 'AIzaSyAn00Si9mmRHinc4En7bmEw_7O-RobMUw8';
 
-// Debug log to check if API key is loaded
+// Service Account credentials for write access
+const SERVICE_ACCOUNT_EMAIL = import.meta.env.VITE_SERVICE_ACCOUNT_EMAIL;
+const SERVICE_ACCOUNT_PRIVATE_KEY = import.meta.env.VITE_SERVICE_ACCOUNT_PRIVATE_KEY;
+
+// Debug log to check if credentials are loaded
 console.log('🔑 API Key loaded:', API_KEY ? `${API_KEY.substring(0, 10)}...` : 'NO API KEY');
+console.log('🔐 Service Account loaded:', SERVICE_ACCOUNT_EMAIL ? 'YES' : 'NO');
 
 // Google Sheets API v4 endpoint for private sheets
 // We need to specify the sheet name or use the range format
 const SHEETS_API_V4_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A:Z?key=${API_KEY}`;
 const SHEETS_API_V4_URL_WITH_RANGE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:Z?key=${API_KEY}`;
 const SHEETS_API_V4_URL_LAGER = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Lager!A:Z?key=${API_KEY}`;
+
+// Google Sheets API write endpoint
+const SHEETS_API_V4_UPDATE_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Lager!`;
+
+// Find the column index for Reserverad_av
+let reservedColumnIndex = -1;
 
 // Public Google Sheets API endpoint (no API key needed for public sheets)
 const SHEETS_API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
@@ -80,11 +91,17 @@ function parseGoogleSheetsAPIv4(data) {
   const headers = data.values[0]; // First row contains headers
   const rows = data.values.slice(1); // Rest are data rows
   
-  return rows.map(row => {
+  // Find the Reserverad_av column index
+  reservedColumnIndex = headers.findIndex(header => header === 'Reserverad_av');
+  console.log('Reserverad_av column found at index:', reservedColumnIndex);
+  
+  return rows.map((row, rowIndex) => {
     const obj = {};
     headers.forEach((header, index) => {
       obj[header] = row[index] || '';
     });
+    // Add row number for updating purposes (1-indexed, +2 because of header and 0-index)
+    obj._rowNumber = rowIndex + 2;
     return obj;
   });
 }
@@ -128,6 +145,8 @@ function transformToPrinterData(rawData) {
       quantity: 1,
       price: row['Värde'] || 'Se avtal',
       lastUpdated: new Date().toISOString().split('T')[0],
+      reservedBy: row['Reserverad_av'] || '',
+      _rowNumber: row._rowNumber, // Include row number for updates
     };
     
     console.log(`Transformed row ${index}:`, result);
@@ -140,31 +159,50 @@ function transformToPrinterData(rawData) {
  */
 export async function fetchPrintersFromGoogleSheets() {
   try {
-    // First try Google Sheets API v4 (for private sheets with API key)
-    if (API_KEY && API_KEY !== 'YOUR_API_KEY_HERE') {
-      try {
-        // Use only the "Lager" sheet
-        console.log('🔍 Fetching data from Lager sheet:', SHEETS_API_V4_URL_LAGER);
-        const response = await fetch(SHEETS_API_V4_URL_LAGER);
-        
-        if (response.ok) {
-          const data = await response.json();
-          const rawData = parseGoogleSheetsAPIv4(data);
-          console.log('✅ Successfully fetched data from Lager sheet');
-          console.log('📊 Raw data preview:', rawData.slice(0, 3));
-          
-          // Only return data if we have meaningful content
-          if (rawData.length > 0) {
-            return transformToPrinterData(rawData);
-          }
-        } else {
-          console.log('❌ Failed to fetch from Lager sheet, Status:', response.status);
-        }
-      } catch (apiError) {
-        console.log('❌ API v4 error:', apiError.message);
+    // Try Service Account authentication first, then fallback to API key
+    let accessToken;
+    try {
+      accessToken = await generateJWT();
+      console.log('🔐 Using Service Account authentication');
+    } catch (error) {
+      console.log('⚠️ Service Account auth failed, falling back to API key');
+      accessToken = null;
+    }
+
+    // First try Google Sheets API v4 with authentication
+    try {
+      const headers = {};
+      let url;
+      
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+        url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Lager!A:Z`;
+      } else if (API_KEY && API_KEY !== 'YOUR_API_KEY_HERE') {
+        url = SHEETS_API_V4_URL_LAGER;
+      } else {
+        throw new Error('No authentication method available');
       }
-    } else {
-      console.log('No valid API key, skipping API v4');
+
+      console.log('🔍 Fetching data from Lager sheet:', url);
+      const response = await fetch(url, { headers });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const rawData = parseGoogleSheetsAPIv4(data);
+        console.log('✅ Successfully fetched data from Lager sheet');
+        console.log('📊 Raw data preview:', rawData.slice(0, 3));
+        
+        // Only return data if we have meaningful content
+        if (rawData.length > 0) {
+          return transformToPrinterData(rawData);
+        }
+      } else {
+        console.log('❌ Failed to fetch from Lager sheet, Status:', response.status);
+        const errorText = await response.text();
+        console.log('❌ Error details:', errorText);
+      }
+    } catch (apiError) {
+      console.log('❌ API v4 error:', apiError.message);
     }
     
     // Fallback to public JSON endpoint
@@ -274,6 +312,217 @@ export function useGoogleSheetsData() {
   }, []);
   
   return { data, loading, error, refetch: fetchData };
+}
+
+/**
+ * Generate access token using Service Account credentials
+ * Using Google's OAuth2 service account flow
+ */
+async function generateJWT() {
+  if (!SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_PRIVATE_KEY) {
+    throw new Error('Service Account credentials not configured');
+  }
+
+  try {
+    // For browser-based applications, we'll use a simpler approach
+    // In production, you'd typically handle this server-side
+    const now = Math.floor(Date.now() / 1000);
+    
+    const header = {
+      alg: 'RS256',
+      typ: 'JWT'
+    };
+
+    const payload = {
+      iss: SERVICE_ACCOUNT_EMAIL,
+      scope: 'https://www.googleapis.com/auth/spreadsheets',
+      aud: 'https://oauth2.googleapis.com/token',
+      exp: now + 3600,
+      iat: now
+    };
+
+    // Create JWT assertion manually (simplified for browser environment)
+    const assertion = await createJWTAssertion(header, payload);
+    
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion: assertion
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      const errorData = await tokenResponse.text();
+      console.error('Token request failed:', errorData);
+      throw new Error(`Failed to get access token: ${tokenResponse.status}`);
+    }
+
+    const tokenData = await tokenResponse.json();
+    return tokenData.access_token;
+  } catch (error) {
+    console.error('JWT generation error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create JWT assertion using Web Crypto API
+ */
+async function createJWTAssertion(header, payload) {
+  try {
+    // Base64URL encode header and payload
+    const base64UrlEncode = (obj) => {
+      return btoa(JSON.stringify(obj))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+    };
+
+    const headerEncoded = base64UrlEncode(header);
+    const payloadEncoded = base64UrlEncode(payload);
+    const message = `${headerEncoded}.${payloadEncoded}`;
+
+    // Import the private key
+    const privateKeyPem = SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, '\n');
+    const keyData = pemToArrayBuffer(privateKeyPem);
+    
+    const cryptoKey = await crypto.subtle.importKey(
+      'pkcs8',
+      keyData,
+      {
+        name: 'RSASSA-PKCS1-v1_5',
+        hash: 'SHA-256'
+      },
+      false,
+      ['sign']
+    );
+
+    // Sign the message
+    const encoder = new TextEncoder();
+    const signature = await crypto.subtle.sign(
+      'RSASSA-PKCS1-v1_5',
+      cryptoKey,
+      encoder.encode(message)
+    );
+
+    // Convert signature to base64url
+    const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+
+    return `${message}.${signatureBase64}`;
+  } catch (error) {
+    console.error('JWT signing error:', error);
+    throw new Error('Failed to create JWT assertion');
+  }
+}
+
+/**
+ * Convert PEM private key to ArrayBuffer
+ */
+function pemToArrayBuffer(pem) {
+  const pemContents = pem
+    .replace('-----BEGIN PRIVATE KEY-----', '')
+    .replace('-----END PRIVATE KEY-----', '')
+    .replace(/\s+/g, '');
+  
+  const binaryString = atob(pemContents);
+  const bytes = new Uint8Array(binaryString.length);
+  
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  
+  return bytes.buffer;
+}
+
+/**
+ * Update a cell in Google Sheets using Service Account
+ */
+export async function updateGoogleSheetCell(rowNumber, columnIndex, value) {
+  if (reservedColumnIndex === -1) {
+    console.error('Reserverad_av column not found');
+    return false;
+  }
+  
+  try {
+    // Convert column index to letter (A=0, B=1, etc.)
+    const columnLetter = String.fromCharCode(65 + columnIndex);
+    const range = `Lager!${columnLetter}${rowNumber}`;
+    
+    // Try Service Account authentication first
+    let accessToken;
+    try {
+      accessToken = await generateJWT();
+    } catch (error) {
+      console.log('Service Account auth failed, falling back to API key');
+      accessToken = null;
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    let url;
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+      url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=RAW`;
+    } else {
+      url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueInputOption=RAW&key=${API_KEY}`;
+    }
+    
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        values: [[value]]
+      })
+    });
+    
+    if (response.ok) {
+      console.log(`✅ Successfully updated cell ${range} with value: ${value}`);
+      return true;
+    } else {
+      const errorText = await response.text();
+      console.error('❌ Failed to update Google Sheet:', response.status, errorText);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error updating Google Sheet:', error);
+    return false;
+  }
+}
+
+/**
+ * Reserve a printer by updating the Reserverad_av column
+ */
+export async function reservePrinterInSheet(printer) {
+  if (reservedColumnIndex === -1) {
+    console.error('Reserverad_av column not found');
+    return false;
+  }
+  
+  const today = new Date().toISOString().split('T')[0];
+  const reservationText = `Reserverad till ${today}`;
+  
+  return await updateGoogleSheetCell(printer._rowNumber, reservedColumnIndex, reservationText);
+}
+
+/**
+ * Unreserve a printer by clearing the Reserverad_av column
+ */
+export async function unreservePrinterInSheet(printer) {
+  if (reservedColumnIndex === -1) {
+    console.error('Reserverad_av column not found');
+    return false;
+  }
+  
+  return await updateGoogleSheetCell(printer._rowNumber, reservedColumnIndex, '');
 }
 
 export default fetchPrintersFromGoogleSheets;
