@@ -1,17 +1,17 @@
 import PropTypes from "prop-types";
 import { Link, NavLink } from "react-router-dom";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import {
   Avatar,
   Button,
   IconButton,
   Typography,
 } from "@material-tailwind/react";
-import { useMaterialTailwindController, setOpenSidenav } from "@/context";
+import { useMaterialTailwindController, setOpenSidenav, setMinimizedSidenav } from "@/context";
 
 export function Sidenav({ brandImg, brandName, routes }) {
   const [controller, dispatch] = useMaterialTailwindController();
-  const { sidenavColor, sidenavType, openSidenav } = controller;
+  const { sidenavColor, sidenavType, openSidenav, minimizedSidenav } = controller;
   const sidenavTypes = {
     dark: "bg-gradient-to-br from-gray-800 to-gray-900",
     white: "bg-white shadow-sm",
@@ -22,18 +22,22 @@ export function Sidenav({ brandImg, brandName, routes }) {
     <aside
       className={`${sidenavTypes[sidenavType]} ${
         openSidenav ? "translate-x-0" : "-translate-x-80"
-      } fixed inset-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] w-72 rounded-xl transition-transform duration-300 xl:translate-x-0 border border-blue-gray-100`}
+      } fixed inset-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] ${
+        minimizedSidenav ? "w-20" : "w-72"
+      } rounded-xl transition-all duration-300 xl:translate-x-0 border border-blue-gray-100`}
     >
       <div
         className={`relative`}
       >
-        <Link to="/" className="py-6 px-8 text-center">
-          <Typography
-            variant="h6"
-            color={sidenavType === "dark" ? "white" : "blue-gray"}
-          >
-            {brandName}
-          </Typography>
+        <Link to="/" className={`py-6 text-center ${minimizedSidenav ? "px-4" : "px-8"}`}>
+          {!minimizedSidenav && (
+            <Typography
+              variant="h6"
+              color={sidenavType === "dark" ? "white" : "blue-gray"}
+            >
+              {brandName}
+            </Typography>
+          )}
         </Link>
         <IconButton
           variant="text"
@@ -45,11 +49,26 @@ export function Sidenav({ brandImg, brandName, routes }) {
         >
           <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
         </IconButton>
+        {/* Toggle minimize button - only visible on desktop */}
+        <IconButton
+          variant="text"
+          color={sidenavType === "dark" ? "white" : "blue-gray"}
+          size="sm"
+          ripple={false}
+          className="absolute right-2 top-2 hidden xl:grid"
+          onClick={() => setMinimizedSidenav(dispatch, !minimizedSidenav)}
+        >
+          {minimizedSidenav ? (
+            <ChevronRightIcon strokeWidth={2.5} className="h-4 w-4" />
+          ) : (
+            <ChevronLeftIcon strokeWidth={2.5} className="h-4 w-4" />
+          )}
+        </IconButton>
       </div>
       <div className="m-4">
         {routes.map(({ layout, title, pages }, key) => (
           <ul key={key} className="mb-4 flex flex-col gap-1">
-            {title && (
+            {title && !minimizedSidenav && (
               <li className="mx-3.5 mt-4 mb-2">
                 <Typography
                   variant="small"
@@ -73,16 +92,18 @@ export function Sidenav({ brandImg, brandName, routes }) {
                           ? "white"
                           : "blue-gray"
                       }
-                      className="flex items-center gap-4 px-4 capitalize"
+                      className={`flex items-center ${minimizedSidenav ? "justify-center px-2" : "gap-4 px-4"} capitalize`}
                       fullWidth
                     >
                       {icon}
-                      <Typography
-                        color="inherit"
-                        className="font-medium capitalize"
-                      >
-                        {name}
-                      </Typography>
+                      {!minimizedSidenav && (
+                        <Typography
+                          color="inherit"
+                          className="font-medium capitalize"
+                        >
+                          {name}
+                        </Typography>
+                      )}
                     </Button>
                   )}
                 </NavLink>

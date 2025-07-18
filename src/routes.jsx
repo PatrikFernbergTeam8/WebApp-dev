@@ -5,8 +5,9 @@ import {
   InformationCircleIcon,
   ServerStackIcon,
   RectangleStackIcon,
+  QrCodeIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications } from "@/pages/dashboard";
+import { Home, Profile, Tables, Notifications, SkannaTillX } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const icon = {
@@ -19,7 +20,7 @@ export const routes = [
     pages: [
       {
         icon: <HomeIcon {...icon} />,
-        name: "dashboard",
+        name: "overview",
         path: "/home",
         element: <Home />,
       },
@@ -31,7 +32,7 @@ export const routes = [
       },
       {
         icon: <TableCellsIcon {...icon} />,
-        name: "tables",
+        name: "lagerstatus",
         path: "/tables",
         element: <Tables />,
       },
@@ -40,6 +41,12 @@ export const routes = [
         name: "notifications",
         path: "/notifications",
         element: <Notifications />,
+      },
+      {
+        icon: <QrCodeIcon {...icon} />,
+        name: "skanna-till-x",
+        path: "/skanna-till-x",
+        element: <SkannaTillX />,
       },
     ],
   },

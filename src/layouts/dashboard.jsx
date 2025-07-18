@@ -12,7 +12,7 @@ import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
 
 export function Dashboard() {
   const [controller, dispatch] = useMaterialTailwindController();
-  const { sidenavType } = controller;
+  const { sidenavType, minimizedSidenav } = controller;
 
   return (
     <div className="min-h-screen bg-blue-gray-50/50">
@@ -22,7 +22,7 @@ export function Dashboard() {
           sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
         }
       />
-      <div className="p-4 xl:ml-80">
+      <div className={`p-4 transition-all duration-300 ${minimizedSidenav ? "xl:ml-24" : "xl:ml-80"}`}>
         <DashboardNavbar />
         <Configurator />
         <IconButton
