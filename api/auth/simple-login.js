@@ -1,5 +1,4 @@
-const jwt = require('jsonwebtoken');
-
+// Simple login without external dependencies for Vercel Functions
 const JWT_SECRET = process.env.JWT_SECRET || 'team8-webapp-super-secret-jwt-key-change-in-production-2024';
 
 // Temporary users for testing (replace with database in production)
@@ -7,6 +6,14 @@ const users = [
   { id: 1, email: 'test@test.com', password: 'test123' },
   { id: 2, email: 'admin@team8.se', password: 'admin123' }
 ];
+
+// Simple base64 encoding for basic token (not secure, just for testing)
+function createSimpleToken(payload) {
+  const header = { alg: 'none', typ: 'JWT' };
+  const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64url');
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${encodedHeader}.${encodedPayload}.`;
+}
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -37,8 +44,13 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Generate JWT token
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+    // Generate simple token
+    const tokenPayload = { 
+      userId: user.id, 
+      email: user.email, 
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+    };
+    const token = createSimpleToken(tokenPayload);
 
     res.json({
       message: 'Login successful',
