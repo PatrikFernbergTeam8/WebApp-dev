@@ -159,32 +159,18 @@ function transformToPrinterData(rawData) {
  */
 export async function fetchPrintersFromGoogleSheets() {
   try {
-    // Try Service Account authentication first, then fallback to API key
-    let accessToken;
-    try {
-      accessToken = await generateJWT();
-      console.log('🔐 Using Service Account authentication');
-    } catch (error) {
-      console.log('⚠️ Service Account auth failed, falling back to API key');
-      accessToken = null;
-    }
+    // Skip Service Account for now due to private key issues, use API key directly
+    console.log('🔑 Using API key authentication directly');
 
-    // First try Google Sheets API v4 with authentication
+    // Try Google Sheets API v4 with API key
     try {
-      const headers = {};
-      let url;
-      
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-        url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Lager!A:Z`;
-      } else if (API_KEY && API_KEY !== 'YOUR_API_KEY_HERE') {
-        url = SHEETS_API_V4_URL_LAGER;
-      } else {
-        throw new Error('No authentication method available');
+      if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') {
+        throw new Error('No API key available');
       }
 
+      const url = SHEETS_API_V4_URL_LAGER;
       console.log('🔍 Fetching data from Lager sheet:', url);
-      const response = await fetch(url, { headers });
+      const response = await fetch(url);
       
       if (response.ok) {
         const data = await response.json();
@@ -200,6 +186,11 @@ export async function fetchPrintersFromGoogleSheets() {
         console.log('❌ Failed to fetch from Lager sheet, Status:', response.status);
         const errorText = await response.text();
         console.log('❌ Error details:', errorText);
+        
+        // If 403, the sheet might not be accessible with this API key
+        if (response.status === 403) {
+          console.log('💡 Tip: Make sure the Google Sheet is shared with the Service Account email or is public');
+        }
       }
     } catch (apiError) {
       console.log('❌ API v4 error:', apiError.message);
