@@ -324,6 +324,9 @@ async function generateJWT() {
   }
 
   try {
+    console.log('🔐 Attempting Service Account authentication...');
+    console.log('📧 Service Account Email:', SERVICE_ACCOUNT_EMAIL);
+    
     // For browser-based applications, we'll use a simpler approach
     // In production, you'd typically handle this server-side
     const now = Math.floor(Date.now() / 1000);
@@ -341,9 +344,12 @@ async function generateJWT() {
       iat: now
     };
 
+    console.log('🔑 Creating JWT assertion...');
     // Create JWT assertion manually (simplified for browser environment)
     const assertion = await createJWTAssertion(header, payload);
+    console.log('✅ JWT assertion created successfully');
     
+    console.log('🌐 Requesting access token...');
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -357,14 +363,15 @@ async function generateJWT() {
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
-      console.error('Token request failed:', errorData);
+      console.error('❌ Token request failed:', errorData);
       throw new Error(`Failed to get access token: ${tokenResponse.status}`);
     }
 
     const tokenData = await tokenResponse.json();
+    console.log('✅ Access token obtained successfully');
     return tokenData.access_token;
   } catch (error) {
-    console.error('JWT generation error:', error);
+    console.error('❌ JWT generation error:', error);
     throw error;
   }
 }
@@ -426,19 +433,29 @@ async function createJWTAssertion(header, payload) {
  * Convert PEM private key to ArrayBuffer
  */
 function pemToArrayBuffer(pem) {
-  const pemContents = pem
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\s+/g, '');
-  
-  const binaryString = atob(pemContents);
-  const bytes = new Uint8Array(binaryString.length);
-  
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+  try {
+    const pemContents = pem
+      .replace('-----BEGIN PRIVATE KEY-----', '')
+      .replace('-----END PRIVATE KEY-----', '')
+      .replace(/\r/g, '')  // Remove carriage returns
+      .replace(/\n/g, '')  // Remove newlines
+      .replace(/\s+/g, ''); // Remove any other whitespace
+    
+    console.log('PEM contents length:', pemContents.length);
+    console.log('PEM contents preview:', pemContents.substring(0, 50) + '...');
+    
+    const binaryString = atob(pemContents);
+    const bytes = new Uint8Array(binaryString.length);
+    
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    return bytes.buffer;
+  } catch (error) {
+    console.error('Error converting PEM to ArrayBuffer:', error);
+    throw new Error('Invalid PEM format');
   }
-  
-  return bytes.buffer;
 }
 
 /**
