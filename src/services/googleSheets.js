@@ -439,15 +439,31 @@ async function createJWTAssertion(header, payload) {
  */
 function pemToArrayBuffer(pem) {
   try {
-    const pemContents = pem
+    // Handle environment variable newlines (both \n and \\n)
+    let cleanPem = pem;
+    if (typeof cleanPem === 'string') {
+      // Replace literal \n strings with actual newlines first
+      cleanPem = cleanPem.replace(/\\n/g, '\n');
+    }
+    
+    const pemContents = cleanPem
       .replace('-----BEGIN PRIVATE KEY-----', '')
       .replace('-----END PRIVATE KEY-----', '')
       .replace(/\r/g, '')  // Remove carriage returns
       .replace(/\n/g, '')  // Remove newlines
-      .replace(/\s+/g, ''); // Remove any other whitespace
+      .replace(/\s+/g, '') // Remove any other whitespace
+      .replace(/"/g, '');  // Remove any quotes
     
-    console.log('PEM contents length:', pemContents.length);
+    console.log('Original PEM length:', pem.length);
+    console.log('PEM contents length after cleaning:', pemContents.length);
     console.log('PEM contents preview:', pemContents.substring(0, 50) + '...');
+    console.log('PEM contents end:', '...' + pemContents.substring(pemContents.length - 20));
+    
+    // Validate base64 format
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(pemContents)) {
+      console.error('Invalid base64 characters found in PEM');
+      throw new Error('PEM contains invalid base64 characters');
+    }
     
     const binaryString = atob(pemContents);
     const bytes = new Uint8Array(binaryString.length);
@@ -456,10 +472,12 @@ function pemToArrayBuffer(pem) {
       bytes[i] = binaryString.charCodeAt(i);
     }
     
+    console.log('✅ Successfully converted PEM to ArrayBuffer');
     return bytes.buffer;
   } catch (error) {
     console.error('Error converting PEM to ArrayBuffer:', error);
-    throw new Error('Invalid PEM format');
+    console.error('PEM input:', pem.substring(0, 100) + '...');
+    throw new Error('Invalid PEM format: ' + error.message);
   }
 }
 
