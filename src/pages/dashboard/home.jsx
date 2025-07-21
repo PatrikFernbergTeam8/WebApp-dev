@@ -17,31 +17,26 @@ import {
   BoltIcon,
   CloudIcon,
   DevicePhoneMobileIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/solid";
 import { StatsOverlayCard } from "@/widgets/cards/stats-overlay-card";
+import { StatsOverlayCardReversed } from "@/widgets/cards/stats-overlay-card-reversed";
 
 export function Home() {
   return (
     <>
       {/* Hero Section with Background Image */}
-      <div className="relative mb-12 py-12 text-white"
-           style={{
-             background: "url('/img/background-image.png')",
-             backgroundSize: 'cover',
-             backgroundPosition: 'center',
-             width: '100vw',
-             marginLeft: '50%',
-             transform: 'translateX(-50%)'
-           }}>
+      <div className="relative mb-12 py-12 text-white bg-[url('/img/background-image.png')] bg-cover bg-center w-full">
         <div className="relative z-10 max-w-7xl mx-auto px-6">
-          <div className="text-center">
-            <Typography variant="h1" className="mb-6 font-black text-6xl drop-shadow-lg">
-              LINK
+          <div className="text-left">
+            <Typography variant="h1" className="mb-6 font-black text-4xl lg:text-5xl drop-shadow-lg flex items-center gap-4">
+              LINK - Leverans 
+              <ChevronRightIcon className="h-8 w-8 lg:h-10 lg:w-10 inline" />
+              INsikt
+              <ChevronRightIcon className="h-8 w-8 lg:h-10 lg:w-10 inline" />
+              Kontroll
             </Typography>
-            <Typography variant="h3" className="mb-6 font-light drop-shadow-md">
-              Leverans. INsikt. Kontroll.
-            </Typography>
-            <Typography className="text-xl leading-relaxed max-w-4xl mx-auto opacity-95 drop-shadow-sm">
+            <Typography className="text-xl leading-relaxed max-w-4xl opacity-95 drop-shadow-sm">
               LINK är navet där Team8 samlar allt som rör teknik, status och affärsvärde – från skrivare och telefoni till systemintegrationer och kundflöden. 
               En intelligent plattform som förenar alla våra system och ger dig fullständig kontroll över verksamheten.
             </Typography>
@@ -51,7 +46,7 @@ export function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-blue-900/40 to-purple-900/50"></div>
       </div>
 
-      <div className="mt-12">
+      <div className="px-6 max-w-7xl mx-auto">
         {/* Key Benefits - Alternating Layout */}
         <div className="mb-16">
         <Typography variant="h3" color="blue-gray" className="mb-12 text-center font-bold">
@@ -152,13 +147,24 @@ export function Home() {
       </div>
 
       {/* Company Stats Section */}
-      <div className="mb-16">
+      <div className="mb-48">
         <StatsOverlayCard 
           image="/img/kontorteam8.png"
           title="Varför välja Team8?"
           description="Med över 120 medarbetare fördelade över 18 kontor från norr till söder har vi den lokala närvaro och expertis som krävs för att leverera tekniska lösningar av högsta klass till företag i hela Sverige."
           buttonText="Kontakta oss"
           buttonColor="green"
+        />
+      </div>
+
+      {/* Second Stats Section */}
+      <div className="mb-48">
+        <StatsOverlayCardReversed 
+          image="/img/kontorteam8.png"
+          title="Vårt expertområde"
+          description="Som specialister inom teknik och IT-lösningar hjälper vi företag att digitalisera och effektivisera sina processer. Med vår djupa tekniska kunskap och branschexpertis levererar vi skräddarsydda lösningar."
+          buttonText="Läs mer om oss"
+          buttonColor="blue"
         />
       </div>
 
@@ -260,12 +266,15 @@ export function Home() {
         </div>
       </div>
 
+      </div>
+      
       {/* Call to Action */}
-      <div className="bg-gradient-to-r from-gray-900 to-blue-900 rounded-3xl p-12 text-center text-white">
+      <div className="bg-gradient-to-r from-gray-900 to-blue-900 p-12 text-center text-white w-full">
         <Typography variant="h3" className="mb-6 font-bold">
           Redo att ta kontrollen?
         </Typography>
-        <Typography className="text-xl mb-8 opacity-90 max-w-3xl mx-auto">
+        <div className="max-w-7xl mx-auto px-6">
+          <Typography className="text-xl mb-8 opacity-90 max-w-3xl mx-auto">
           LINK förenar alla dina affärsprocesser i ett intelligent ekosystem. 
           Agera snabbare, fatta smartare beslut och ligga steget före konkurrensen.
         </Typography>
@@ -283,7 +292,7 @@ export function Home() {
             <span>Säker och skalbar</span>
           </div>
         </div>
-      </div>
+        </div>
       </div>
     </>
   );

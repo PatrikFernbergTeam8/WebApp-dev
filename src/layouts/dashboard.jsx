@@ -15,21 +15,21 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-blue-gray-50/50">
       <HeaderNav routes={routes} />
-      <div className="px-6 py-4 max-w-7xl mx-auto">
-        <Configurator />
+      <Configurator />
+      <div className="px-4 max-w-screen-2xl mx-auto">
         <Routes>
-          {routes.map(
-            ({ layout, pages }) =>
-              layout === "dashboard" &&
-              pages.map(({ path, element }) => (
-                <Route exact path={path} element={element} />
-              ))
-          )}
-        </Routes>
+            {routes.map(
+              ({ layout, pages }) =>
+                layout === "dashboard" &&
+                pages.map(({ path, element }) => (
+                  <Route exact path={path} element={element} />
+                ))
+            )}
+          </Routes>
+      </div>
         <div className="text-blue-gray-600">
           <Footer />
         </div>
-      </div>
     </div>
   );
 }

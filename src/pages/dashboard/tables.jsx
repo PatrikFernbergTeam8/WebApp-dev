@@ -62,7 +62,7 @@ export function Tables() {
           // Custom status order: Tillgänglig, Ej klar, Under lagning, Levererad
           const statusOrder = {
             'tillgänglig': 1,
-            'ej klar': 2,
+            'inväntar rekond': 2,
             'under lagning': 3,
             'levererad': 4
           };
@@ -118,7 +118,7 @@ export function Tables() {
       case "delivered":
         return "Levererad";
       case "pending":
-        return "Ej klar";
+        return "Inväntar rekond";
       case "cancelled":
         return "Under lagning";
       case "available":
@@ -231,206 +231,229 @@ export function Tables() {
 
   // Function to render a printer table
   const renderPrinterTable = (printers, title, headerColor = "gray", isNewPrintersTable = false) => {
+    const getGradientClass = (isNewPrintersTable) => {
+      return isNewPrintersTable 
+        ? "bg-gradient-to-r from-blue-500 to-blue-600" 
+        : "bg-gradient-to-r from-green-500 to-green-600";
+    };
+
     return (
-      <Card>
-        <CardHeader variant="gradient" color={headerColor} className="mb-8 p-6">
-          <div className="flex items-center justify-between">
-            <Typography variant="h6" color="white">
-              {title} ({printers.length}) {loading && <Spinner className="ml-2 h-4 w-4" />}
-            </Typography>
-            <div className="flex items-center gap-2">
-              {error && (
-                <Typography variant="small" color="red" className="mr-2">
-                  Error: {error}
-                </Typography>
-              )}
-              <Button
-                variant="text"
-                color="white"
-                size="sm"
-                onClick={refetch}
-                disabled={loading}
-                className="flex items-center gap-2"
-              >
-                <ArrowPathIcon className="h-4 w-4" />
-                Uppdatera
-              </Button>
+      <div className="group">
+        <Card className="rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-gray-200 p-4 text-blue-gray-800 relative">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Typography variant="h6" className="mb-2 font-bold">
+                    {title}
+                  </Typography>
+                  <div className="flex items-center gap-2">
+                    <Typography variant="small" className="text-blue-gray-600">
+                      {printers.length} skrivare i lager
+                    </Typography>
+                    {loading && <Spinner className="h-4 w-4" />}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {error && (
+                    <Typography variant="small" className="mr-2 text-red-600">
+                      Error: {error}
+                    </Typography>
+                  )}
+                  <Button
+                    variant="outlined"
+                    color="blue-gray"
+                    size="sm"
+                    onClick={refetch}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowPathIcon className="h-4 w-4" />
+                    Uppdatera
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-        </CardHeader>
-        <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-          <table className="w-full min-w-[640px] table-auto">
-            <thead>
-              <tr>
-                {[
-                  { label: "Märke/Modell", key: "brandModel" },
-                  { label: "Serienummer", key: "serialNumber" },
-                  { label: "Status", key: "status" },
-                  { label: isNewPrintersTable ? "Säljare" : "Senaste kund", key: isNewPrintersTable ? "sellerName" : "location" },
-                  { label: "Lagervärde", key: "price" },
-                  { label: "", key: null }
-                ].map(({ label, key }) => (
-                  <th
-                    key={label}
-                    className={`border-b border-blue-gray-50 py-3 px-5 text-left ${key ? 'cursor-pointer hover:bg-blue-gray-50' : ''}`}
-                    onClick={key ? () => handleSort(key) : undefined}
-                  >
-                    <div className="flex items-center gap-1">
-                      <Typography
-                        variant="small"
-                        className="text-[11px] font-bold uppercase text-blue-gray-400"
-                      >
-                        {label}
-                      </Typography>
-                      {key && (
-                        <div className="flex flex-col">
-                          <ChevronUpIcon 
-                            className={`h-3 w-3 ${
-                              sortConfig.key === key && sortConfig.direction === 'asc' 
-                                ? 'text-blue-500' 
-                                : 'text-blue-gray-300'
-                            }`}
-                          />
-                          <ChevronDownIcon 
-                            className={`h-3 w-3 ${
-                              sortConfig.key === key && sortConfig.direction === 'desc' 
-                                ? 'text-blue-500' 
-                                : 'text-blue-gray-300'
-                            }`}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {printers.map(
-                ({ brand, model, status, location, price, serialNumber, sellerName, customerName, isSold, _rowNumber }, key) => {
-                  const className = `py-3 px-5 ${
-                    key === printers.length - 1
-                      ? ""
-                      : "border-b border-blue-gray-50"
-                  }`;
-
-                  const getStatusColor = (status) => {
-                    switch (status) {
-                      case "delivered":
-                        return "green";
-                      case "pending":
-                        return "orange";
-                      case "cancelled":
-                        return "red";
-                      case "available":
-                        return "green";
-                      default:
-                        return "blue-gray";
-                    }
-                  };
-
-                  return (
-                    <tr key={`${brand}-${model}-${key}`}>
-                      <td className={className}>
-                        <Typography className="text-xs font-semibold text-blue-gray-600">
-                          {brand} {model}
+        <CardBody className="p-6">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] table-auto">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  {[
+                    { label: "Märke/Modell", key: "brandModel" },
+                    { label: "Serienummer", key: "serialNumber" },
+                    { label: "Status", key: "status" },
+                    { label: isNewPrintersTable ? "Säljare" : "Senaste kund", key: isNewPrintersTable ? "sellerName" : "location" },
+                    { label: "Lagervärde", key: "price" },
+                    { label: "", key: null }
+                  ].map(({ label, key }) => (
+                    <th
+                      key={label}
+                      className={`py-2 px-6 text-left rounded-lg ${key ? 'cursor-pointer hover:bg-gray-100 transition-colors duration-200' : ''}`}
+                      onClick={key ? () => handleSort(key) : undefined}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Typography
+                          variant="small"
+                          className="text-xs font-semibold uppercase text-blue-gray-600 tracking-wider"
+                        >
+                          {label}
                         </Typography>
-                      </td>
-                      <td className={className}>
-                        <Typography className="text-xs font-semibold text-blue-gray-600">
-                          {serialNumber}
-                        </Typography>
-                      </td>
-                      <td className={className}>
-                        <Chip
-                          variant="gradient"
-                          color={getStatusColor(status)}
-                          value={getStatusText(status)}
-                          className="py-0.5 px-2 text-[11px] font-medium w-fit"
-                        />
-                      </td>
-                      <td className={className}>
-                        <Typography className="text-xs font-semibold text-blue-gray-600">
-                          {isNewPrintersTable && sellerName ? sellerName : location}
-                        </Typography>
-                      </td>
-                      <td className={className}>
-                        <Typography className="text-xs font-semibold text-blue-gray-600">
-                          {price}
-                        </Typography>
-                      </td>
-                      <td className={className}>
-                        {/* Check if printer is reserved or sold */}
-                        {allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy ? (
-                          <Typography className="text-xs font-semibold text-blue-gray-600">
-                            {allPrinters.find(p => p._rowNumber === _rowNumber)?.isSold ? 
-                              `Såld till ${allPrinters.find(p => p._rowNumber === _rowNumber)?.customerName || 'okänd kund'}` : 
-                              allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy
-                            }
-                          </Typography>
-                        ) : (
-                          /* Show reservation input or button only for available printers */
-                          status === 'available' ? (
-                            reservationInput.rowNumber === _rowNumber ? (
-                              <div className="flex gap-0.5 items-center">
-                                <Input
-                                  size="sm"
-                                  placeholder="Ditt namn"
-                                  value={reservationInput.name}
-                                  onChange={(e) => setReservationInput(prev => ({ ...prev, name: e.target.value }))}
-                                  className="w-32 !border-blue-gray-200 focus:!border-blue-gray-200 focus:!border-t-blue-gray-200"
-                                  labelProps={{
-                                    className: "hidden",
-                                  }}
-                                  containerProps={{
-                                    className: "!min-w-0",
-                                  }}
-                                />
-                                <Button
-                                  variant="gradient"
-                                  color="green"
-                                  size="sm"
-                                  onClick={() => confirmReservation({ brand, model, status, location, price, serialNumber, _rowNumber })}
-                                  className="px-2 py-1"
-                                >
-                                  OK
-                                </Button>
-                                <Button
-                                  variant="outlined"
-                                  color="gray"
-                                  size="sm"
-                                  onClick={cancelReservationInput}
-                                  className="px-2 py-1"
-                                >
-                                  Avbryt
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button
-                                variant="gradient"
-                                color="blue"
-                                size="sm"
-                                onClick={() => showReservationInput({ brand, model, status, location, price, serialNumber, _rowNumber })}
-                                className="px-3 py-1"
-                              >
-                                Reservera
-                              </Button>
-                            )
-                          ) : (
-                            <Typography className="text-xs font-semibold text-blue-gray-600">
-                              Går ej att reservera
-                            </Typography>
-                          )
+                        {key && (
+                          <div className="flex flex-col">
+                            <ChevronUpIcon 
+                              className={`h-3 w-3 transition-colors duration-200 ${
+                                sortConfig.key === key && sortConfig.direction === 'asc' 
+                                  ? 'text-blue-600' 
+                                  : 'text-blue-gray-300'
+                              }`}
+                            />
+                            <ChevronDownIcon 
+                              className={`h-3 w-3 transition-colors duration-200 ${
+                                sortConfig.key === key && sortConfig.direction === 'desc' 
+                                  ? 'text-blue-600' 
+                                  : 'text-blue-gray-300'
+                              }`}
+                            />
+                          </div>
                         )}
-                      </td>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {printers.map(
+                  ({ brand, model, status, location, price, serialNumber, sellerName, customerName, isSold, _rowNumber }, key) => {
+                    const className = `py-2 px-6 ${
+                      key === printers.length - 1
+                        ? ""
+                        : "border-b border-gray-100"
+                    }`;
+
+                    const getStatusColor = (status) => {
+                      switch (status) {
+                        case "delivered":
+                          return "green";
+                        case "pending":
+                          return "orange";
+                        case "cancelled":
+                          return "red";
+                        case "available":
+                          return "green";
+                        default:
+                          return "blue-gray";
+                      }
+                    };
+
+                    const getStatusGradient = (status) => {
+                      switch (status) {
+                        case "delivered":
+                          return "bg-gradient-to-r from-green-100 to-green-200 text-green-800";
+                        case "pending":
+                          return "bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800";
+                        case "cancelled":
+                          return "bg-gradient-to-r from-red-100 to-red-200 text-red-800";
+                        case "available":
+                          return "bg-gradient-to-r from-green-100 to-green-200 text-green-800";
+                        default:
+                          return "bg-gradient-to-r from-blue-gray-100 to-blue-gray-200 text-blue-gray-800";
+                      }
+                    };
+
+                    return (
+                      <tr key={`${brand}-${model}-${key}`} className="group">
+                        <td className={className}>
+                          <Typography className="text-sm font-semibold text-blue-gray-700">
+                            {brand} {model}
+                          </Typography>
+                        </td>
+                        <td className={className}>
+                          <Typography className="text-sm font-semibold text-blue-gray-700">
+                            {serialNumber}
+                          </Typography>
+                        </td>
+                        <td className={className}>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusGradient(status)}`}>
+                            {getStatusText(status)}
+                          </span>
+                        </td>
+                        <td className={className}>
+                          <Typography className="text-sm font-semibold text-blue-gray-700">
+                            {isNewPrintersTable && sellerName ? sellerName : location}
+                          </Typography>
+                        </td>
+                        <td className={className}>
+                          <Typography className="text-sm font-semibold text-blue-gray-700">
+                            {price}
+                          </Typography>
+                        </td>
+                        <td className={className}>
+                          {/* Check if printer is reserved or sold */}
+                          {allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy ? (
+                            <Typography className="text-sm font-semibold text-blue-gray-700">
+                              {allPrinters.find(p => p._rowNumber === _rowNumber)?.isSold ? 
+                                `Såld till ${allPrinters.find(p => p._rowNumber === _rowNumber)?.customerName || 'okänd kund'}` : 
+                                allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy
+                              }
+                            </Typography>
+                          ) : (
+                            /* Show reservation input or button only for available printers */
+                            status === 'available' ? (
+                              reservationInput.rowNumber === _rowNumber ? (
+                                <div className="flex gap-2 items-center">
+                                  <Input
+                                    size="sm"
+                                    placeholder="Ditt namn"
+                                    value={reservationInput.name}
+                                    onChange={(e) => setReservationInput(prev => ({ ...prev, name: e.target.value }))}
+                                    className="w-24 !border-[#25323A] focus:!border-[#25323A] focus:!border-t-[#25323A] rounded-lg text-xs"
+                                    labelProps={{
+                                      className: "hidden",
+                                    }}
+                                    containerProps={{
+                                      className: "!min-w-0",
+                                    }}
+                                  />
+                                  <span
+                                    onClick={() => confirmReservation({ brand, model, status, location, price, serialNumber, _rowNumber })}
+                                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-green-100 to-green-200 text-green-800 cursor-pointer hover:from-green-200 hover:to-green-300 transition-colors duration-200"
+                                  >
+                                    OK
+                                  </span>
+                                  <span
+                                    onClick={cancelReservationInput}
+                                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 cursor-pointer hover:from-gray-200 hover:to-gray-300 transition-colors duration-200"
+                                  >
+                                    Avbryt
+                                  </span>
+                                </div>
+                              ) : (
+                                <span 
+                                  onClick={() => showReservationInput({ brand, model, status, location, price, serialNumber, _rowNumber })}
+                                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 cursor-pointer hover:from-blue-200 hover:to-blue-300 transition-colors duration-200"
+                                >
+                                  Reservera
+                                </span>
+                              )
+                            ) : (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600">
+                                Går ej att reservera
+                              </span>
+                            )
+                          )}
+                        </td>
                     </tr>
                   );
                 }
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardBody>
-      </Card>
+        </Card>
+      </div>
     );
   };
   
@@ -454,109 +477,114 @@ export function Tables() {
     <div className="mt-12 mb-8 flex flex-col gap-12">
       {/* Combined Statistics and Search Card */}
       <div className="mb-6">
-        <Card>
-          <CardBody className="p-6">
-            <div className="flex items-center justify-between gap-6">
+        <Card className="rounded-2xl shadow-xl border border-gray-100">
+          <CardBody className="p-8">
+            <div className="flex items-center justify-between gap-8">
               {/* Statistics */}
-              <div className="flex items-center gap-32">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 flex-1">
                 {/* Skrivare i lager */}
-                <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-lg p-3">
-                    <PrinterIcon className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <Typography variant="small" className="text-blue-gray-600">
-                      Skrivare i lager
-                    </Typography>
-                    <Typography variant="h5" color="blue-gray" className="font-bold">
-                      {totalPrinters.toString()}
-                    </Typography>
+                <div className="group hover:scale-105 transition-transform duration-300">
+                  <div className="bg-[#25323A] rounded-xl p-4 text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                      <PrinterIcon className="w-8 h-8 mb-3 opacity-90" />
+                      <Typography variant="small" className="opacity-90 mb-1">
+                        Skrivare i lager
+                      </Typography>
+                      <Typography variant="h4" className="font-bold">
+                        {totalPrinters}
+                      </Typography>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white opacity-10 rounded-full"></div>
                   </div>
                 </div>
                 
                 {/* Lagervärde */}
-                <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-lg p-3">
-                    <CurrencyDollarIcon className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <Typography variant="small" className="text-blue-gray-600">
-                      Lagervärde
-                    </Typography>
-                    <Typography variant="h5" color="blue-gray" className="font-bold">
-                      {formatValue(totalValue)}
-                    </Typography>
+                <div className="group hover:scale-105 transition-transform duration-300">
+                  <div className="bg-[#25323A] rounded-xl p-4 text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                      <CurrencyDollarIcon className="w-8 h-8 mb-3 opacity-90" />
+                      <Typography variant="small" className="opacity-90 mb-1">
+                        Lagervärde
+                      </Typography>
+                      <Typography variant="h4" className="font-bold">
+                        {formatValue(totalValue)}
+                      </Typography>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white opacity-10 rounded-full"></div>
                   </div>
                 </div>
                 
                 {/* Reserverade */}
-                <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-lg p-3">
-                    <PrinterIcon className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <Typography variant="small" className="text-blue-gray-600">
-                      Reserverade
-                    </Typography>
-                    <Typography variant="h5" color="blue-gray" className="font-bold">
-                      {totalReserved.toString()}
-                    </Typography>
+                <div className="group hover:scale-105 transition-transform duration-300">
+                  <div className="bg-[#25323A] rounded-xl p-4 text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                      <PrinterIcon className="w-8 h-8 mb-3 opacity-90" />
+                      <Typography variant="small" className="opacity-90 mb-1">
+                        Reserverade
+                      </Typography>
+                      <Typography variant="h4" className="font-bold">
+                        {totalReserved}
+                      </Typography>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white opacity-10 rounded-full"></div>
                   </div>
                 </div>
                 
                 {/* Lagning */}
-                <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-lg p-3">
-                    <PrinterIcon className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <Typography variant="small" className="text-blue-gray-600">
-                      Lagning
-                    </Typography>
-                    <Typography variant="h5" color="blue-gray" className="font-bold">
-                      {allPrinters.filter(p => p.status === 'cancelled').length.toString()}
-                    </Typography>
+                <div className="group hover:scale-105 transition-transform duration-300">
+                  <div className="bg-[#25323A] rounded-xl p-4 text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                      <PrinterIcon className="w-8 h-8 mb-3 opacity-90" />
+                      <Typography variant="small" className="opacity-90 mb-1">
+                        Under lagning
+                      </Typography>
+                      <Typography variant="h4" className="font-bold">
+                        {allPrinters.filter(p => p.status === 'cancelled').length}
+                      </Typography>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white opacity-10 rounded-full"></div>
                   </div>
                 </div>
               </div>
 
               {/* Search Section */}
-              <div className="flex flex-col gap-2 w-1/3">
-                <Typography variant="small" color="blue-gray" className="font-medium">
-                  Sök skrivare:
+              <div className="flex flex-col gap-3 w-1/3 min-w-[300px]">
+                <Typography variant="h6" color="blue-gray" className="font-semibold">
+                  Sök skrivare
                 </Typography>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Input
                     placeholder="Sök på märke, modell, serienummer..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="!border-blue-gray-200 focus:!border-blue-gray-200 w-full"
+                    className="!border-[#25323A] focus:!border-[#25323A] focus:!border-t-[#25323A] w-full rounded-lg"
                     labelProps={{
                       className: "hidden",
                     }}
                     containerProps={{
-                      className: "!min-w-0 before:!border-transparent after:!border-transparent",
+                      className: "!min-w-0",
                     }}
                   />
                   {searchQuery && (
                     <Button
                       variant="outlined"
-                      color="gray"
                       size="sm"
                       onClick={() => setSearchQuery('')}
-                      className="text-xs px-2 py-1"
+                      className="px-4 py-2 rounded-lg border-gray-300 text-gray-600 hover:bg-gray-50 transition-all duration-200"
                     >
                       Rensa
                     </Button>
                   )}
                 </div>
                 {searchQuery && (
-                  <Typography variant="small" color="blue-gray" className="text-xs">
-                    {(usedPrinters.length + newPrinters.length) > 0 ? 
-                      `${usedPrinters.length + newPrinters.length} resultat` : 
-                      'Inga resultat'
-                    }
-                  </Typography>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <Typography variant="small" color="blue-gray" className="text-sm font-medium">
+                      {(usedPrinters.length + newPrinters.length) > 0 ? 
+                        `${usedPrinters.length + newPrinters.length} resultat funna` : 
+                        'Inga resultat'
+                      }
+                    </Typography>
+                  </div>
                 )}
               </div>
             </div>

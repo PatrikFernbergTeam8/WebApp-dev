@@ -4,7 +4,7 @@ import {
   Button,
 } from "@material-tailwind/react";
 
-export function StatsOverlayCard({ 
+export function StatsOverlayCardReversed({ 
   image = "/img/placeholder-office.jpg",
   title = "Om Team8",
   description = "Vi är ett ledande teknikföretag som specialiserar oss på att leverera innovativa lösningar för moderna företag. Vårt fokus ligger på att skapa värde genom teknologi.",
@@ -12,8 +12,8 @@ export function StatsOverlayCard({
   buttonColor = "blue"
 }) {
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start">
-      {/* Vänster sektion - Bild med överliggande statistik */}
+    <div className="flex flex-col lg:flex-row-reverse gap-8 items-start">
+      {/* Höger sektion - Bild med överliggande statistik */}
       <div className="relative lg:w-2/3 w-full">
         {/* Huvudbild */}
         <div className="relative rounded-2xl overflow-hidden">
@@ -25,7 +25,7 @@ export function StatsOverlayCard({
         </div>
         
         {/* Överliggande statistik-element */}
-        <div className="absolute -bottom-32 -right-96 bg-green-800 rounded-2xl py-8 px-16 shadow-xl">
+        <div className="absolute -bottom-32 -left-96 bg-green-800 rounded-2xl py-8 px-16 shadow-xl">
           <div className="flex gap-20">
             {/* Första statistik-sektion */}
             <div className="text-white text-center">
@@ -56,7 +56,7 @@ export function StatsOverlayCard({
         </div>
       </div>
 
-      {/* Höger sektion - Textblock */}
+      {/* Vänster sektion - Textblock */}
       <div className="lg:w-1/3 w-full">
         <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
           <Typography variant="h4" color="blue-gray" className="mb-4 font-bold">
@@ -78,4 +78,4 @@ export function StatsOverlayCard({
   );
 }
 
-export default StatsOverlayCard;
+export default StatsOverlayCardReversed;
