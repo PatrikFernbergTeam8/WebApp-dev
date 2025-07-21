@@ -24,8 +24,15 @@ export function Home() {
   return (
     <>
       {/* Hero Section with Background Image */}
-      <div className="relative overflow-hidden bg-[url('/img/background-image.png')] bg-cover bg-center mb-12 py-12 text-white w-full"
-           style={{marginLeft: 'calc(-100vw / 2 + 50%)', marginRight: 'calc(-100vw / 2 + 50%)', width: '100vw'}}>
+      <div className="relative mb-12 py-12 text-white"
+           style={{
+             background: "url('/img/background-image.png')",
+             backgroundSize: 'cover',
+             backgroundPosition: 'center',
+             width: '100vw',
+             marginLeft: '50%',
+             transform: 'translateX(-50%)'
+           }}>
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="text-center">
             <Typography variant="h1" className="mb-6 font-black text-6xl drop-shadow-lg">
