@@ -136,13 +136,21 @@ function transformToPrinterData(rawData) {
     if (fullModel.includes('IM') || fullModel.includes('MP') || fullModel.includes('Bizhub')) type = 'Multifunktion';
     if (fullModel.includes('Touchpanel')) type = 'Touchpanel';
     
-    // Extract seller name from reservation text
+    // Extract seller name from reservation/sold text
     const reservedText = row['Reserverad_av'] || '';
     let sellerName = '';
+    let isSold = false;
+    
     if (reservedText.includes('Reserverad av ')) {
       const match = reservedText.match(/Reserverad av (.+?) till/);
       if (match) {
         sellerName = match[1];
+      }
+    } else if (reservedText.includes('Såld av ')) {
+      const match = reservedText.match(/Såld av (.+?)$/);
+      if (match) {
+        sellerName = match[1];
+        isSold = true;
       }
     }
 
@@ -152,6 +160,9 @@ function transformToPrinterData(rawData) {
     if (conditionText && conditionText.toLowerCase().includes('ny')) {
       condition = 'new';
     }
+
+    // Extract customer name from column O (0-indexed = 14)
+    const customerName = Object.keys(row)[14] ? row[Object.keys(row)[14]] : '';
 
     const result = {
       brand: brand || 'Unknown',
@@ -166,6 +177,8 @@ function transformToPrinterData(rawData) {
       lastUpdated: new Date().toISOString().split('T')[0],
       reservedBy: reservedText,
       sellerName: sellerName,
+      customerName: customerName,
+      isSold: isSold,
       _rowNumber: row._rowNumber, // Include row number for updates
     };
     

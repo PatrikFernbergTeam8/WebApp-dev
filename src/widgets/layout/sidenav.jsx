@@ -29,16 +29,55 @@ export function Sidenav({ brandImg, brandName, routes }) {
       <div
         className={`relative`}
       >
-        <Link to="/" className={`py-6 text-center ${minimizedSidenav ? "px-4" : "px-8"}`}>
+        <div className={`py-3 text-left ${minimizedSidenav ? "px-4" : "px-4"} flex items-center gap-2`}>
+          <Link to="/" className="flex items-center gap-2">
+            <img 
+              src={minimizedSidenav 
+                ? (sidenavType === "dark" ? "/img/icon_vit.png" : "/img/icon.png")
+                : (sidenavType === "dark" ? "/img/logo_vit.png" : "/img/logo_svart.png")
+              } 
+              alt="Logo" 
+              className="h-24 w-24 object-contain"
+            />
+            {!minimizedSidenav && (
+              <Typography
+                variant="h5"
+                color={sidenavType === "dark" ? "white" : "blue-gray"}
+                className="whitespace-nowrap"
+              >
+                {brandName}
+              </Typography>
+            )}
+          </Link>
+          {/* Toggle minimize button when expanded - only visible on desktop */}
           {!minimizedSidenav && (
-            <Typography
-              variant="h6"
+            <IconButton
+              variant="text"
               color={sidenavType === "dark" ? "white" : "blue-gray"}
+              size="sm"
+              ripple={false}
+              className="hidden xl:grid ml-2"
+              onClick={() => setMinimizedSidenav(dispatch, !minimizedSidenav)}
             >
-              {brandName}
-            </Typography>
+              <ChevronLeftIcon strokeWidth={2.5} className="h-4 w-4" />
+            </IconButton>
           )}
-        </Link>
+        </div>
+        {/* Toggle expand button when minimized - positioned between logo and menu */}
+        {minimizedSidenav && (
+          <div className="px-4 pb-2">
+            <IconButton
+              variant="text"
+              color={sidenavType === "dark" ? "white" : "blue-gray"}
+              size="sm"
+              ripple={false}
+              className="hidden xl:grid w-full"
+              onClick={() => setMinimizedSidenav(dispatch, !minimizedSidenav)}
+            >
+              <ChevronRightIcon strokeWidth={2.5} className="h-4 w-4" />
+            </IconButton>
+          </div>
+        )}
         <IconButton
           variant="text"
           color="white"
@@ -48,21 +87,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
           onClick={() => setOpenSidenav(dispatch, false)}
         >
           <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
-        </IconButton>
-        {/* Toggle minimize button - only visible on desktop */}
-        <IconButton
-          variant="text"
-          color={sidenavType === "dark" ? "white" : "blue-gray"}
-          size="sm"
-          ripple={false}
-          className="absolute right-2 top-2 hidden xl:grid"
-          onClick={() => setMinimizedSidenav(dispatch, !minimizedSidenav)}
-        >
-          {minimizedSidenav ? (
-            <ChevronRightIcon strokeWidth={2.5} className="h-4 w-4" />
-          ) : (
-            <ChevronLeftIcon strokeWidth={2.5} className="h-4 w-4" />
-          )}
         </IconButton>
       </div>
       <div className="m-4">
@@ -118,7 +142,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
 Sidenav.defaultProps = {
   brandImg: "/img/logo-ct.png",
-  brandName: "Material Tailwind React",
+  brandName: "Status Page",
 };
 
 Sidenav.propTypes = {

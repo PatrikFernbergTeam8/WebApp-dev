@@ -12,7 +12,7 @@ import {
   Input,
 } from "@material-tailwind/react";
 import { EllipsisVerticalIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
-import { BanknotesIcon, UsersIcon, UserPlusIcon, ChartBarIcon } from "@heroicons/react/24/solid";
+import { BanknotesIcon, UsersIcon, UserPlusIcon, ChartBarIcon, PrinterIcon, CurrencyDollarIcon } from "@heroicons/react/24/solid";
 import { printersInventoryData } from "@/data";
 import React, { useState, useEffect } from "react";
 import { StatisticsCard } from "@/widgets/cards";
@@ -35,6 +35,9 @@ export function Tables() {
     rowNumber: null,
     name: ''
   });
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Use live data if available, otherwise fall back to static data
   const allPrinters = liveData.length > 0 ? liveData : printersInventoryData;
@@ -125,32 +128,28 @@ export function Tables() {
     }
   };
   
-  // Separate and sort printers based on condition and reservation status
-  const usedPrinters = sortPrinters(allPrinters.filter(printer => !printer.reservedBy && printer.condition === 'used'));
-  const newPrinters = sortPrinters(allPrinters.filter(printer => !printer.reservedBy && printer.condition === 'new'));
-  const reservedPrinters = sortPrinters(allPrinters.filter(printer => printer.reservedBy));
-  
-  // Function to calculate time remaining
-  const getTimeRemaining = (reservedAt) => {
-    const now = new Date();
-    const reservedDate = new Date(reservedAt);
-    const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000; // 2 weeks in milliseconds
-    const expirationDate = new Date(reservedDate.getTime() + twoWeeksInMs);
-    const timeLeft = expirationDate - now;
+  // Search/filter function
+  const filterPrinters = (printers) => {
+    if (!searchQuery.trim()) return printers;
     
-    if (timeLeft <= 0) {
-      return { expired: true, text: "Utgången" };
-    }
-    
-    const days = Math.floor(timeLeft / (24 * 60 * 60 * 1000));
-    const hours = Math.floor((timeLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-    
-    if (days > 0) {
-      return { expired: false, text: `${days} dag${days !== 1 ? 'ar' : ''} kvar` };
-    } else {
-      return { expired: false, text: `${hours} timm${hours !== 1 ? 'ar' : 'e'} kvar` };
-    }
+    return printers.filter(printer => {
+      const searchTerm = searchQuery.toLowerCase();
+      return (
+        (printer.brand || '').toLowerCase().includes(searchTerm) ||
+        (printer.model || '').toLowerCase().includes(searchTerm) ||
+        (printer.serialNumber || '').toLowerCase().includes(searchTerm) ||
+        (printer.location || '').toLowerCase().includes(searchTerm) ||
+        (printer.sellerName || '').toLowerCase().includes(searchTerm) ||
+        (printer.customerName || '').toLowerCase().includes(searchTerm) ||
+        `${printer.brand} ${printer.model}`.toLowerCase().includes(searchTerm)
+      );
+    });
   };
+
+  // Separate, filter, and sort printers based on condition and search query
+  const usedPrinters = sortPrinters(filterPrinters(allPrinters.filter(printer => printer.condition === 'used')));
+  const newPrinters = sortPrinters(filterPrinters(allPrinters.filter(printer => printer.condition === 'new')));
+  
   
   // Function to show reservation input
   const showReservationInput = (printer) => {
@@ -210,7 +209,7 @@ export function Tables() {
   
   // Calculate statistics
   const totalPrinters = usedPrinters.length + newPrinters.length;
-  const totalReserved = reservedPrinters.length;
+  const totalReserved = allPrinters.filter(printer => printer.reservedBy).length;
   
   // Calculate total inventory value (all printers regardless of status or reservation)
   const totalValue = allPrinters.reduce((sum, printer) => {
@@ -231,7 +230,7 @@ export function Tables() {
   console.log('Total value:', totalValue);
 
   // Function to render a printer table
-  const renderPrinterTable = (printers, title, headerColor = "gray") => {
+  const renderPrinterTable = (printers, title, headerColor = "gray", isNewPrintersTable = false) => {
     return (
       <Card>
         <CardHeader variant="gradient" color={headerColor} className="mb-8 p-6">
@@ -267,7 +266,7 @@ export function Tables() {
                   { label: "Märke/Modell", key: "brandModel" },
                   { label: "Serienummer", key: "serialNumber" },
                   { label: "Status", key: "status" },
-                  { label: "Senaste kund", key: "location" },
+                  { label: isNewPrintersTable ? "Säljare" : "Senaste kund", key: isNewPrintersTable ? "sellerName" : "location" },
                   { label: "Lagervärde", key: "price" },
                   { label: "", key: null }
                 ].map(({ label, key }) => (
@@ -308,7 +307,7 @@ export function Tables() {
             </thead>
             <tbody>
               {printers.map(
-                ({ brand, model, status, location, price, serialNumber, _rowNumber }, key) => {
+                ({ brand, model, status, location, price, serialNumber, sellerName, customerName, isSold, _rowNumber }, key) => {
                   const className = `py-3 px-5 ${
                     key === printers.length - 1
                       ? ""
@@ -352,7 +351,7 @@ export function Tables() {
                       </td>
                       <td className={className}>
                         <Typography className="text-xs font-semibold text-blue-gray-600">
-                          {location}
+                          {isNewPrintersTable && sellerName ? sellerName : location}
                         </Typography>
                       </td>
                       <td className={className}>
@@ -361,56 +360,67 @@ export function Tables() {
                         </Typography>
                       </td>
                       <td className={className}>
-                        {status === 'available' ? (
-                          reservationInput.rowNumber === _rowNumber ? (
-                            <div className="flex gap-0.5 items-center">
-                              <Input
-                                size="sm"
-                                placeholder="Ditt namn"
-                                value={reservationInput.name}
-                                onChange={(e) => setReservationInput(prev => ({ ...prev, name: e.target.value }))}
-                                className="w-32 !border-blue-gray-200 focus:!border-blue-gray-200 focus:!border-t-blue-gray-200"
-                                labelProps={{
-                                  className: "hidden",
-                                }}
-                                containerProps={{
-                                  className: "!min-w-0",
-                                }}
-                              />
+                        {/* Check if printer is reserved or sold */}
+                        {allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy ? (
+                          <Typography className="text-xs font-semibold text-blue-gray-600">
+                            {allPrinters.find(p => p._rowNumber === _rowNumber)?.isSold ? 
+                              `Såld till ${allPrinters.find(p => p._rowNumber === _rowNumber)?.customerName || 'okänd kund'}` : 
+                              allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy
+                            }
+                          </Typography>
+                        ) : (
+                          /* Show reservation input or button only for available printers */
+                          status === 'available' ? (
+                            reservationInput.rowNumber === _rowNumber ? (
+                              <div className="flex gap-0.5 items-center">
+                                <Input
+                                  size="sm"
+                                  placeholder="Ditt namn"
+                                  value={reservationInput.name}
+                                  onChange={(e) => setReservationInput(prev => ({ ...prev, name: e.target.value }))}
+                                  className="w-32 !border-blue-gray-200 focus:!border-blue-gray-200 focus:!border-t-blue-gray-200"
+                                  labelProps={{
+                                    className: "hidden",
+                                  }}
+                                  containerProps={{
+                                    className: "!min-w-0",
+                                  }}
+                                />
+                                <Button
+                                  variant="gradient"
+                                  color="green"
+                                  size="sm"
+                                  onClick={() => confirmReservation({ brand, model, status, location, price, serialNumber, _rowNumber })}
+                                  className="px-2 py-1"
+                                >
+                                  OK
+                                </Button>
+                                <Button
+                                  variant="outlined"
+                                  color="gray"
+                                  size="sm"
+                                  onClick={cancelReservationInput}
+                                  className="px-2 py-1"
+                                >
+                                  Avbryt
+                                </Button>
+                              </div>
+                            ) : (
                               <Button
                                 variant="gradient"
-                                color="green"
+                                color="blue"
                                 size="sm"
-                                onClick={() => confirmReservation({ brand, model, status, location, price, serialNumber, _rowNumber })}
-                                className="px-2 py-1"
+                                onClick={() => showReservationInput({ brand, model, status, location, price, serialNumber, _rowNumber })}
+                                className="px-3 py-1"
                               >
-                                OK
+                                Reservera
                               </Button>
-                              <Button
-                                variant="outlined"
-                                color="gray"
-                                size="sm"
-                                onClick={cancelReservationInput}
-                                className="px-2 py-1"
-                              >
-                                Avbryt
-                              </Button>
-                            </div>
+                            )
                           ) : (
-                            <Button
-                              variant="gradient"
-                              color="blue"
-                              size="sm"
-                              onClick={() => showReservationInput({ brand, model, status, location, price, serialNumber, _rowNumber })}
-                              className="px-3 py-1"
-                            >
-                              Reservera
-                            </Button>
+                            <Typography className="text-xs font-semibold text-blue-gray-600">
+                              Går ej att reservera
+                            </Typography>
                           )
-                        ) : (
-                          <Typography className="text-xs font-semibold text-blue-gray-600">
-                            Går ej att reservera
-                          </Typography>
                         )}
                       </td>
                     </tr>
@@ -442,228 +452,124 @@ export function Tables() {
   
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
-      {/* Statistics Cards */}
-      <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
-        <StatisticsCard
-          color="gray"
-          icon={React.createElement(ChartBarIcon, {
-            className: "w-6 h-6 text-white",
-          })}
-          title="Antal skrivare i lager"
-          value={totalPrinters.toString()}
-          footer={
-            <Typography className="font-normal text-blue-gray-600">
-              <strong className="text-green-500">
-                {allPrinters.filter(p => p.status === 'available' && !p.reservedBy).length}
-              </strong>
-              &nbsp;tillgängliga
-            </Typography>
-          }
-        />
-        <StatisticsCard
-          color="gray"
-          icon={React.createElement(BanknotesIcon, {
-            className: "w-6 h-6 text-white",
-          })}
-          title="Totalt lagervärde"
-          value={formatValue(totalValue)}
-          footer={
-            <Typography className="font-normal text-blue-gray-600">
-              <strong className="text-blue-500">
-                {allPrinters.length}
-              </strong>
-              &nbsp;skrivare totalt
-            </Typography>
-          }
-        />
-        <StatisticsCard
-          color="gray"
-          icon={React.createElement(UserPlusIcon, {
-            className: "w-6 h-6 text-white",
-          })}
-          title="Antal reserverade skrivare"
-          value={totalReserved.toString()}
-          footer={
-            <Typography className="font-normal text-blue-gray-600">
-              <strong className="text-orange-500">
-                {totalReserved > 0 ? `${((totalReserved / totalPrinters) * 100).toFixed(1)}%` : '0%'}
-              </strong>
-              &nbsp;av totalt lager
-            </Typography>
-          }
-        />
-        <StatisticsCard
-          color="gray"
-          icon={React.createElement(UsersIcon, {
-            className: "w-6 h-6 text-white",
-          })}
-          title="Under lagning"
-          value={allPrinters.filter(p => p.status === 'cancelled').length.toString()}
-          footer={
-            <Typography className="font-normal text-blue-gray-600">
-              <strong className="text-red-500">
-                {allPrinters.filter(p => p.status === 'pending').length}
-              </strong>
-              &nbsp;inväntar rekond
-            </Typography>
-          }
-        />
+      {/* Combined Statistics and Search Card */}
+      <div className="mb-6">
+        <Card>
+          <CardBody className="p-6">
+            <div className="flex items-center justify-between gap-6">
+              {/* Statistics */}
+              <div className="flex items-center gap-32">
+                {/* Skrivare i lager */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-lg p-3">
+                    <PrinterIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <Typography variant="small" className="text-blue-gray-600">
+                      Skrivare i lager
+                    </Typography>
+                    <Typography variant="h5" color="blue-gray" className="font-bold">
+                      {totalPrinters.toString()}
+                    </Typography>
+                  </div>
+                </div>
+                
+                {/* Lagervärde */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-lg p-3">
+                    <CurrencyDollarIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <Typography variant="small" className="text-blue-gray-600">
+                      Lagervärde
+                    </Typography>
+                    <Typography variant="h5" color="blue-gray" className="font-bold">
+                      {formatValue(totalValue)}
+                    </Typography>
+                  </div>
+                </div>
+                
+                {/* Reserverade */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-lg p-3">
+                    <PrinterIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <Typography variant="small" className="text-blue-gray-600">
+                      Reserverade
+                    </Typography>
+                    <Typography variant="h5" color="blue-gray" className="font-bold">
+                      {totalReserved.toString()}
+                    </Typography>
+                  </div>
+                </div>
+                
+                {/* Lagning */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-lg p-3">
+                    <PrinterIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <Typography variant="small" className="text-blue-gray-600">
+                      Lagning
+                    </Typography>
+                    <Typography variant="h5" color="blue-gray" className="font-bold">
+                      {allPrinters.filter(p => p.status === 'cancelled').length.toString()}
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Section */}
+              <div className="flex flex-col gap-2 w-1/3">
+                <Typography variant="small" color="blue-gray" className="font-medium">
+                  Sök skrivare:
+                </Typography>
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Sök på märke, modell, serienummer..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="!border-blue-gray-200 focus:!border-blue-gray-200 w-full"
+                    labelProps={{
+                      className: "hidden",
+                    }}
+                    containerProps={{
+                      className: "!min-w-0 before:!border-transparent after:!border-transparent",
+                    }}
+                  />
+                  {searchQuery && (
+                    <Button
+                      variant="outlined"
+                      color="gray"
+                      size="sm"
+                      onClick={() => setSearchQuery('')}
+                      className="text-xs px-2 py-1"
+                    >
+                      Rensa
+                    </Button>
+                  )}
+                </div>
+                {searchQuery && (
+                  <Typography variant="small" color="blue-gray" className="text-xs">
+                    {(usedPrinters.length + newPrinters.length) > 0 ? 
+                      `${usedPrinters.length + newPrinters.length} resultat` : 
+                      'Inga resultat'
+                    }
+                  </Typography>
+                )}
+              </div>
+            </div>
+          </CardBody>
+        </Card>
       </div>
       
       {/* Begagnade skrivare i lager */}
       {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray")}
       
       {/* Nya skrivare i lager */}
-      {renderPrinterTable(newPrinters, "Nya skrivare i lager", "blue")}
+      {renderPrinterTable(newPrinters, "Nya skrivare i lager", "blue", true)}
       
-      {/* Reserved Printers Table */}
-      {reservedPrinters.length > 0 && (
-        <Card>
-          <CardHeader variant="gradient" color="orange" className="mb-8 p-6">
-            <Typography variant="h6" color="white">
-              Reserverade skrivare ({reservedPrinters.length})
-            </Typography>
-          </CardHeader>
-          <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-            <table className="w-full min-w-[640px] table-auto">
-              <thead>
-                <tr>
-                  {[
-                    { label: "Märke/Modell", key: "brandModel" },
-                    { label: "Serienummer", key: "serialNumber" },
-                    { label: "Status", key: "status" },
-                    { label: "Säljare", key: "sellerName" },
-                    { label: "Tid kvar", key: null },
-                    { label: "Senaste kund", key: "location" },
-                    { label: "Lagervärde", key: "price" },
-                    { label: "", key: null }
-                  ].map(({ label, key }) => (
-                    <th
-                      key={label}
-                      className={`border-b border-blue-gray-50 py-3 px-5 text-left ${key ? 'cursor-pointer hover:bg-blue-gray-50' : ''}`}
-                      onClick={key ? () => handleSort(key) : undefined}
-                    >
-                      <div className="flex items-center gap-1">
-                        <Typography
-                          variant="small"
-                          className="text-[11px] font-bold uppercase text-blue-gray-400"
-                        >
-                          {label}
-                        </Typography>
-                        {key && (
-                          <div className="flex flex-col">
-                            <ChevronUpIcon 
-                              className={`h-3 w-3 ${
-                                sortConfig.key === key && sortConfig.direction === 'asc' 
-                                  ? 'text-blue-500' 
-                                  : 'text-blue-gray-300'
-                              }`}
-                            />
-                            <ChevronDownIcon 
-                              className={`h-3 w-3 ${
-                                sortConfig.key === key && sortConfig.direction === 'desc' 
-                                  ? 'text-blue-500' 
-                                  : 'text-blue-gray-300'
-                              }`}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {reservedPrinters.map(
-                  ({ brand, model, status, location, price, serialNumber, sellerName, reservedBy, _rowNumber }, key) => {
-                    const className = `py-3 px-5 ${
-                      key === reservedPrinters.length - 1
-                        ? ""
-                        : "border-b border-blue-gray-50"
-                    }`;
-
-                    // Parse reservation date from reservedBy text (format: "Reserverad till YYYY-MM-DD")
-                    const reservationDate = reservedBy.includes('till') ? reservedBy.split('till ')[1] : '';
-                    const timeRemaining = reservationDate ? getTimeRemaining(reservationDate) : { expired: false, text: 'Okänt' };
-
-                    const getStatusColor = (status) => {
-                      switch (status) {
-                        case "delivered":
-                          return "green";
-                        case "pending":
-                          return "orange";
-                        case "cancelled":
-                          return "red";
-                        case "available":
-                          return "green";
-                        default:
-                          return "blue-gray";
-                      }
-                    };
-
-
-                    return (
-                      <tr key={`reserved-${brand}-${model}-${key}`}>
-                        <td className={className}>
-                          <Typography className="text-xs font-semibold text-blue-gray-600">
-                            {brand} {model}
-                          </Typography>
-                        </td>
-                        <td className={className}>
-                          <Typography className="text-xs font-semibold text-blue-gray-600">
-                            {serialNumber}
-                          </Typography>
-                        </td>
-                        <td className={className}>
-                          <Chip
-                            variant="gradient"
-                            color="orange"
-                            value="Reserverad"
-                            className="py-0.5 px-2 text-[11px] font-medium w-fit"
-                          />
-                        </td>
-                        <td className={className}>
-                          <Typography className="text-xs font-semibold text-blue-gray-600">
-                            {sellerName || '-'}
-                          </Typography>
-                        </td>
-                        <td className={className}>
-                          <Typography 
-                            className={`text-xs font-semibold ${timeRemaining.expired ? 'text-red-600' : 'text-blue-gray-600'}`}
-                          >
-                            {timeRemaining.text}
-                          </Typography>
-                        </td>
-                        <td className={className}>
-                          <Typography className="text-xs font-semibold text-blue-gray-600">
-                            {location}
-                          </Typography>
-                        </td>
-                        <td className={className}>
-                          <Typography className="text-xs font-semibold text-blue-gray-600">
-                            {price}
-                          </Typography>
-                        </td>
-                        <td className={className}>
-                          <Button
-                            variant="outlined"
-                            color="red"
-                            size="sm"
-                            onClick={() => unreservePrinter({ brand, model, status, location, price, serialNumber, sellerName, _rowNumber })}
-                            className="px-3 py-1"
-                          >
-                            Avreservera
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  }
-                )}
-              </tbody>
-            </table>
-          </CardBody>
-        </Card>
-      )}
     </div>
   );
 }

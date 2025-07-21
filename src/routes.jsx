@@ -6,8 +6,9 @@ import {
   ServerStackIcon,
   RectangleStackIcon,
   QrCodeIcon,
+  PrinterIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications, SkannaTillX } from "@/pages/dashboard";
+import { Home, Sida3 as Profile, Tables, Sida1 as Notifications, Sida2 as SkannaTillX } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const icon = {
@@ -20,38 +21,43 @@ export const routes = [
     pages: [
       {
         icon: <HomeIcon {...icon} />,
-        name: "overview",
+        name: "hem",
         path: "/home",
         element: <Home />,
       },
       {
-        icon: <UserCircleIcon {...icon} />,
-        name: "profile",
-        path: "/profile",
-        element: <Profile />,
-      },
-      {
-        icon: <TableCellsIcon {...icon} />,
+        icon: <PrinterIcon {...icon} />,
         name: "lagerstatus",
         path: "/tables",
         element: <Tables />,
       },
+    ],
+  },
+  {
+    title: "kommer snart",
+    layout: "dashboard",
+    pages: [
       {
         icon: <InformationCircleIcon {...icon} />,
-        name: "notifications",
-        path: "/notifications",
+        name: "sida 1",
+        path: "/sida-1",
         element: <Notifications />,
       },
       {
         icon: <QrCodeIcon {...icon} />,
-        name: "skanna-till-x",
-        path: "/skanna-till-x",
+        name: "sida 2",
+        path: "/sida-2",
         element: <SkannaTillX />,
+      },
+      {
+        icon: <UserCircleIcon {...icon} />,
+        name: "sida 3",
+        path: "/sida-3",
+        element: <Profile />,
       },
     ],
   },
   {
-    title: "auth pages",
     layout: "auth",
     pages: [
       {

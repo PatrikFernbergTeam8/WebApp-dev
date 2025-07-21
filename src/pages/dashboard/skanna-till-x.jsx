@@ -5,7 +5,7 @@ import { StatisticsChart } from "@/widgets/charts";
 import { statisticsCardsData, statisticsChartsData } from "@/data";
 import { ClockIcon } from "@heroicons/react/24/solid";
 
-export function SkannaTillX() {
+export function Sida2() {
   // Filter to get only Daily Sales chart
   const dailySalesChart = statisticsChartsData.find(chart => chart.title === "Daily Sales");
 
@@ -49,4 +49,4 @@ export function SkannaTillX() {
   );
 }
 
-export default SkannaTillX;
+export default Sida2;
