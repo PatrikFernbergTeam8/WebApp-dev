@@ -12,7 +12,7 @@ import {
   Input,
 } from "@material-tailwind/react";
 import { EllipsisVerticalIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
-import { BanknotesIcon, UsersIcon, UserPlusIcon, ChartBarIcon, PrinterIcon, CurrencyDollarIcon } from "@heroicons/react/24/solid";
+import { BanknotesIcon, UsersIcon, UserPlusIcon, ChartBarIcon, PrinterIcon, CurrencyDollarIcon, BookmarkIcon, WrenchScrewdriverIcon, HandRaisedIcon } from "@heroicons/react/24/solid";
 import { printersInventoryData } from "@/data";
 import React, { useState, useEffect } from "react";
 import { StatisticsCard } from "@/widgets/cards";
@@ -290,7 +290,7 @@ export function Tables() {
                   ].map(({ label, key }) => (
                     <th
                       key={label}
-                      className={`py-2 px-6 text-left rounded-lg ${key ? 'cursor-pointer hover:bg-gray-100 transition-colors duration-200' : ''}`}
+                      className={`py-2 px-4 text-left rounded-lg ${key ? 'cursor-pointer hover:bg-gray-100 transition-colors duration-200' : ''}`}
                       onClick={key ? () => handleSort(key) : undefined}
                     >
                       <div className="flex items-center gap-2">
@@ -326,7 +326,7 @@ export function Tables() {
               <tbody>
                 {printers.map(
                   ({ brand, model, status, location, price, serialNumber, sellerName, customerName, isSold, _rowNumber }, key) => {
-                    const className = `py-2 px-6 ${
+                    const className = `py-2 px-4 ${
                       key === printers.length - 1
                         ? ""
                         : "border-b border-gray-100"
@@ -460,11 +460,11 @@ export function Tables() {
   // Format value for display
   const formatValue = (value) => {
     if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M kr`;
+      return `${(value / 1000000).toFixed(1)}M`;
     } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}k kr`;
+      return `${(value / 1000).toFixed(0)}k`;
     } else {
-      return `${value} kr`;
+      return `${value}`;
     }
   };
   
@@ -474,130 +474,127 @@ export function Tables() {
   console.log('New printers:', newPrinters.length);
   
   return (
-    <div className="mt-12 mb-8 flex flex-col gap-12">
-      {/* Combined Statistics and Search Card */}
-      <div className="mb-6">
-        <Card className="rounded-2xl shadow-xl border border-gray-100">
-          <CardBody className="p-8">
-            <div className="flex items-center justify-between gap-8">
-              {/* Statistics */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 flex-1">
-                {/* Skrivare i lager */}
-                <div className="group hover:scale-105 transition-transform duration-300">
-                  <div className="bg-[#25323A] rounded-xl p-4 text-white relative overflow-hidden">
-                    <div className="relative z-10">
-                      <PrinterIcon className="w-8 h-8 mb-3 opacity-90" />
-                      <Typography variant="small" className="opacity-90 mb-1">
-                        Skrivare i lager
-                      </Typography>
-                      <Typography variant="h4" className="font-bold">
-                        {totalPrinters}
-                      </Typography>
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white opacity-10 rounded-full"></div>
-                  </div>
-                </div>
-                
-                {/* Lagervärde */}
-                <div className="group hover:scale-105 transition-transform duration-300">
-                  <div className="bg-[#25323A] rounded-xl p-4 text-white relative overflow-hidden">
-                    <div className="relative z-10">
-                      <CurrencyDollarIcon className="w-8 h-8 mb-3 opacity-90" />
-                      <Typography variant="small" className="opacity-90 mb-1">
-                        Lagervärde
-                      </Typography>
-                      <Typography variant="h4" className="font-bold">
-                        {formatValue(totalValue)}
-                      </Typography>
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white opacity-10 rounded-full"></div>
-                  </div>
-                </div>
-                
-                {/* Reserverade */}
-                <div className="group hover:scale-105 transition-transform duration-300">
-                  <div className="bg-[#25323A] rounded-xl p-4 text-white relative overflow-hidden">
-                    <div className="relative z-10">
-                      <PrinterIcon className="w-8 h-8 mb-3 opacity-90" />
-                      <Typography variant="small" className="opacity-90 mb-1">
-                        Reserverade
-                      </Typography>
-                      <Typography variant="h4" className="font-bold">
-                        {totalReserved}
-                      </Typography>
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white opacity-10 rounded-full"></div>
-                  </div>
-                </div>
-                
-                {/* Lagning */}
-                <div className="group hover:scale-105 transition-transform duration-300">
-                  <div className="bg-[#25323A] rounded-xl p-4 text-white relative overflow-hidden">
-                    <div className="relative z-10">
-                      <PrinterIcon className="w-8 h-8 mb-3 opacity-90" />
-                      <Typography variant="small" className="opacity-90 mb-1">
-                        Under lagning
-                      </Typography>
-                      <Typography variant="h4" className="font-bold">
-                        {allPrinters.filter(p => p.status === 'cancelled').length}
-                      </Typography>
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white opacity-10 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Search Section */}
-              <div className="flex flex-col gap-3 w-1/3 min-w-[300px]">
-                <Typography variant="h6" color="blue-gray" className="font-semibold">
-                  Sök skrivare
-                </Typography>
-                <div className="flex items-center gap-3">
-                  <Input
-                    placeholder="Sök på märke, modell, serienummer..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="!border-[#25323A] focus:!border-[#25323A] focus:!border-t-[#25323A] w-full rounded-lg"
-                    labelProps={{
-                      className: "hidden",
-                    }}
-                    containerProps={{
-                      className: "!min-w-0",
-                    }}
-                  />
-                  {searchQuery && (
-                    <Button
-                      variant="outlined"
-                      size="sm"
-                      onClick={() => setSearchQuery('')}
-                      className="px-4 py-2 rounded-lg border-gray-300 text-gray-600 hover:bg-gray-50 transition-all duration-200"
-                    >
-                      Rensa
-                    </Button>
-                  )}
-                </div>
-                {searchQuery && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <Typography variant="small" color="blue-gray" className="text-sm font-medium">
-                      {(usedPrinters.length + newPrinters.length) > 0 ? 
-                        `${usedPrinters.length + newPrinters.length} resultat funna` : 
-                        'Inga resultat'
-                      }
+    <div className="mb-8">
+      {/* Combined Statistics and Search - Full Width Background */}
+      <div className="relative mb-12 py-20 w-full bg-[url('/img/background-image.png')] bg-cover bg-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between gap-8">
+            {/* Statistics */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 flex-1">
+              {/* Skrivare i lager */}
+              <div className="group hover:scale-105 transition-transform duration-300">
+                <div className="rounded-xl p-4 text-white relative overflow-hidden">
+                  <div className="relative z-10">
+                    <PrinterIcon className="w-12 h-12 mb-4 opacity-90" />
+                    <Typography variant="h6" className="opacity-90 mb-2">
+                      Skrivare i lager
+                    </Typography>
+                    <Typography variant="h3" className="font-bold">
+                      {totalPrinters}
                     </Typography>
                   </div>
-                )}
+                </div>
+              </div>
+              
+              {/* Lagervärde */}
+              <div className="group hover:scale-105 transition-transform duration-300">
+                <div className="rounded-xl p-4 text-white relative overflow-hidden">
+                  <div className="relative z-10">
+                    <CurrencyDollarIcon className="w-12 h-12 mb-4 opacity-90" />
+                    <Typography variant="h6" className="opacity-90 mb-2">
+                      Lagervärde
+                    </Typography>
+                    <Typography variant="h3" className="font-bold">
+                      {formatValue(totalValue)}
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Reserverade */}
+              <div className="group hover:scale-105 transition-transform duration-300">
+                <div className="rounded-xl p-4 text-white relative overflow-hidden">
+                  <div className="relative z-10">
+                    <HandRaisedIcon className="w-12 h-12 mb-4 opacity-90" />
+                    <Typography variant="h6" className="opacity-90 mb-2">
+                      Reserverade
+                    </Typography>
+                    <Typography variant="h3" className="font-bold">
+                      {totalReserved}
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Lagning */}
+              <div className="group hover:scale-105 transition-transform duration-300">
+                <div className="rounded-xl p-4 text-white relative overflow-hidden">
+                  <div className="relative z-10">
+                    <WrenchScrewdriverIcon className="w-12 h-12 mb-4 opacity-90" />
+                    <Typography variant="h6" className="opacity-90 mb-2">
+                      Under lagning
+                    </Typography>
+                    <Typography variant="h3" className="font-bold">
+                      {allPrinters.filter(p => p.status === 'cancelled').length}
+                    </Typography>
+                  </div>
+                </div>
               </div>
             </div>
-          </CardBody>
-        </Card>
+
+            {/* Search Section */}
+            <div className="flex flex-col gap-3 w-1/3 min-w-[300px]">
+              <Typography variant="h6" className="font-semibold text-white">
+                Sök skrivare
+              </Typography>
+              <div className="flex items-center gap-3">
+                <Input
+                  placeholder="Sök på märke, modell, serienummer..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="!border-white/30 focus:!border-white focus:!border-t-white w-full rounded-lg !text-white placeholder:!text-white/70 bg-white/10"
+                  labelProps={{
+                    className: "hidden",
+                  }}
+                  containerProps={{
+                    className: "!min-w-0",
+                  }}
+                />
+                {searchQuery && (
+                  <Button
+                    variant="outlined"
+                    size="sm"
+                    onClick={() => setSearchQuery('')}
+                    className="px-4 py-2 rounded-lg border-white/30 text-white hover:bg-white/10 transition-all duration-200"
+                  >
+                    Rensa
+                  </Button>
+                )}
+              </div>
+              {searchQuery && (
+                <div className="bg-black/20 rounded-lg p-3">
+                  <Typography variant="small" className="text-sm font-medium text-white">
+                    {(usedPrinters.length + newPrinters.length) > 0 ? 
+                      `${usedPrinters.length + newPrinters.length} resultat funna` : 
+                      'Inga resultat'
+                    }
+                  </Typography>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* Dark overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-blue-900/40 to-purple-900/50"></div>
       </div>
-      
-      {/* Begagnade skrivare i lager */}
-      {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray")}
-      
-      {/* Nya skrivare i lager */}
-      {renderPrinterTable(newPrinters, "Nya skrivare i lager", "blue", true)}
-      
+
+      <div className="max-w-7xl mx-auto px-6 flex flex-col gap-12">
+        {/* Begagnade skrivare i lager */}
+        {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray")}
+        
+        {/* Nya skrivare i lager */}
+        {renderPrinterTable(newPrinters, "Nya skrivare i lager", "blue", true)}
+      </div>
     </div>
   );
 }

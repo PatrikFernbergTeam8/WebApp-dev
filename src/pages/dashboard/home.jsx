@@ -26,7 +26,7 @@ export function Home() {
   return (
     <>
       {/* Hero Section with Background Image */}
-      <div className="relative mb-12 py-12 text-white bg-[url('/img/background-image.png')] bg-cover bg-center w-full">
+      <div className="relative mb-12 py-20 text-white bg-[url('/img/background-image.png')] bg-cover bg-center w-full">
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="text-left">
             <Typography variant="h1" className="mb-6 font-black text-4xl lg:text-5xl drop-shadow-lg flex items-center gap-4">
