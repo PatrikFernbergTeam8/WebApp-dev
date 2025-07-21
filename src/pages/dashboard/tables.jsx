@@ -9,8 +9,9 @@ import {
   Progress,
   Button,
   Spinner,
+  Input,
 } from "@material-tailwind/react";
-import { EllipsisVerticalIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { EllipsisVerticalIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import { BanknotesIcon, UsersIcon, UserPlusIcon, ChartBarIcon } from "@heroicons/react/24/solid";
 import { printersInventoryData } from "@/data";
 import React, { useState, useEffect } from "react";
@@ -23,12 +24,111 @@ export function Tables() {
   // Use Google Sheets API - hooks must be called at top level
   const { data: liveData, loading, error, refetch } = useGoogleSheetsData();
   
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState({
+    key: 'status',
+    direction: 'asc'
+  });
+
+  // Reservation input state
+  const [reservationInput, setReservationInput] = useState({
+    rowNumber: null,
+    name: ''
+  });
+  
   // Use live data if available, otherwise fall back to static data
   const allPrinters = liveData.length > 0 ? liveData : printersInventoryData;
   
-  // Separate printers based on Reserverad_av column from Google Sheets
-  const availablePrinters = allPrinters.filter(printer => !printer.reservedBy);
-  const reservedPrinters = allPrinters.filter(printer => printer.reservedBy);
+  // Sorting function
+  const sortPrinters = (printers) => {
+    if (!sortConfig.key) return printers;
+    
+    return [...printers].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortConfig.key) {
+        case 'brandModel':
+          aValue = `${a.brand} ${a.model}`.toLowerCase();
+          bValue = `${b.brand} ${b.model}`.toLowerCase();
+          break;
+        case 'serialNumber':
+          aValue = (a.serialNumber || '').toLowerCase();
+          bValue = (b.serialNumber || '').toLowerCase();
+          break;
+        case 'status':
+          // Custom status order: Tillgänglig, Ej klar, Under lagning, Levererad
+          const statusOrder = {
+            'tillgänglig': 1,
+            'ej klar': 2,
+            'under lagning': 3,
+            'levererad': 4
+          };
+          aValue = statusOrder[getStatusText(a.status).toLowerCase()] || 5;
+          bValue = statusOrder[getStatusText(b.status).toLowerCase()] || 5;
+          break;
+        case 'location':
+          aValue = (a.location || '').toLowerCase();
+          bValue = (b.location || '').toLowerCase();
+          break;
+        case 'sellerName':
+          aValue = (a.sellerName || '').toLowerCase();
+          bValue = (b.sellerName || '').toLowerCase();
+          break;
+        case 'price':
+          // Extract numeric value for price sorting
+          const extractPrice = (price) => {
+            if (typeof price === 'string') {
+              const numMatch = price.replace(/\s/g, '').match(/\d+/);
+              return numMatch ? parseInt(numMatch[0]) : 0;
+            }
+            return typeof price === 'number' ? price : 0;
+          };
+          aValue = extractPrice(a.price);
+          bValue = extractPrice(b.price);
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+  
+  // Handle sort click
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  // Get status text function (moved up to be available for filtering)
+  const getStatusText = (status) => {
+    switch (status) {
+      case "delivered":
+        return "Levererad";
+      case "pending":
+        return "Ej klar";
+      case "cancelled":
+        return "Under lagning";
+      case "available":
+        return "Tillgänglig";
+      default:
+        return status;
+    }
+  };
+  
+  // Separate and sort printers based on condition and reservation status
+  const usedPrinters = sortPrinters(allPrinters.filter(printer => !printer.reservedBy && printer.condition === 'used'));
+  const newPrinters = sortPrinters(allPrinters.filter(printer => !printer.reservedBy && printer.condition === 'new'));
+  const reservedPrinters = sortPrinters(allPrinters.filter(printer => printer.reservedBy));
   
   // Function to calculate time remaining
   const getTimeRemaining = (reservedAt) => {
@@ -52,11 +152,37 @@ export function Tables() {
     }
   };
   
-  // Function to reserve a printer by updating Google Sheets
-  const reservePrinter = async (printer) => {
+  // Function to show reservation input
+  const showReservationInput = (printer) => {
+    setReservationInput({
+      rowNumber: printer._rowNumber,
+      name: ''
+    });
+  };
+
+  // Function to cancel reservation input
+  const cancelReservationInput = () => {
+    setReservationInput({
+      rowNumber: null,
+      name: ''
+    });
+  };
+
+  // Function to confirm reservation
+  const confirmReservation = async (printer) => {
+    if (!reservationInput.name.trim()) {
+      alert('Vänligen ange ditt namn');
+      return;
+    }
+
     try {
-      const success = await reservePrinterInSheet(printer);
+      const success = await reservePrinterInSheet(printer, reservationInput.name.trim());
       if (success) {
+        // Reset input state
+        setReservationInput({
+          rowNumber: null,
+          name: ''
+        });
         // Refresh data from Google Sheets
         refetch();
       } else {
@@ -83,7 +209,7 @@ export function Tables() {
   };
   
   // Calculate statistics
-  const totalPrinters = availablePrinters.length;
+  const totalPrinters = usedPrinters.length + newPrinters.length;
   const totalReserved = reservedPrinters.length;
   
   // Calculate total inventory value (all printers regardless of status or reservation)
@@ -99,9 +225,204 @@ export function Tables() {
   
   // Debug log
   console.log('All printers for value calculation:', allPrinters.length);
-  console.log('Reserved printers:', reservedPrinters.length);
-  console.log('Available printers:', availablePrinters.length);
+  console.log('Used printers:', usedPrinters.length);
+  console.log('New printers:', newPrinters.length);
+  console.log('Reserved printers:', totalReserved);
   console.log('Total value:', totalValue);
+
+  // Function to render a printer table
+  const renderPrinterTable = (printers, title, headerColor = "gray") => {
+    return (
+      <Card>
+        <CardHeader variant="gradient" color={headerColor} className="mb-8 p-6">
+          <div className="flex items-center justify-between">
+            <Typography variant="h6" color="white">
+              {title} ({printers.length}) {loading && <Spinner className="ml-2 h-4 w-4" />}
+            </Typography>
+            <div className="flex items-center gap-2">
+              {error && (
+                <Typography variant="small" color="red" className="mr-2">
+                  Error: {error}
+                </Typography>
+              )}
+              <Button
+                variant="text"
+                color="white"
+                size="sm"
+                onClick={refetch}
+                disabled={loading}
+                className="flex items-center gap-2"
+              >
+                <ArrowPathIcon className="h-4 w-4" />
+                Uppdatera
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
+          <table className="w-full min-w-[640px] table-auto">
+            <thead>
+              <tr>
+                {[
+                  { label: "Märke/Modell", key: "brandModel" },
+                  { label: "Serienummer", key: "serialNumber" },
+                  { label: "Status", key: "status" },
+                  { label: "Senaste kund", key: "location" },
+                  { label: "Lagervärde", key: "price" },
+                  { label: "", key: null }
+                ].map(({ label, key }) => (
+                  <th
+                    key={label}
+                    className={`border-b border-blue-gray-50 py-3 px-5 text-left ${key ? 'cursor-pointer hover:bg-blue-gray-50' : ''}`}
+                    onClick={key ? () => handleSort(key) : undefined}
+                  >
+                    <div className="flex items-center gap-1">
+                      <Typography
+                        variant="small"
+                        className="text-[11px] font-bold uppercase text-blue-gray-400"
+                      >
+                        {label}
+                      </Typography>
+                      {key && (
+                        <div className="flex flex-col">
+                          <ChevronUpIcon 
+                            className={`h-3 w-3 ${
+                              sortConfig.key === key && sortConfig.direction === 'asc' 
+                                ? 'text-blue-500' 
+                                : 'text-blue-gray-300'
+                            }`}
+                          />
+                          <ChevronDownIcon 
+                            className={`h-3 w-3 ${
+                              sortConfig.key === key && sortConfig.direction === 'desc' 
+                                ? 'text-blue-500' 
+                                : 'text-blue-gray-300'
+                            }`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {printers.map(
+                ({ brand, model, status, location, price, serialNumber, _rowNumber }, key) => {
+                  const className = `py-3 px-5 ${
+                    key === printers.length - 1
+                      ? ""
+                      : "border-b border-blue-gray-50"
+                  }`;
+
+                  const getStatusColor = (status) => {
+                    switch (status) {
+                      case "delivered":
+                        return "green";
+                      case "pending":
+                        return "orange";
+                      case "cancelled":
+                        return "red";
+                      case "available":
+                        return "green";
+                      default:
+                        return "blue-gray";
+                    }
+                  };
+
+                  return (
+                    <tr key={`${brand}-${model}-${key}`}>
+                      <td className={className}>
+                        <Typography className="text-xs font-semibold text-blue-gray-600">
+                          {brand} {model}
+                        </Typography>
+                      </td>
+                      <td className={className}>
+                        <Typography className="text-xs font-semibold text-blue-gray-600">
+                          {serialNumber}
+                        </Typography>
+                      </td>
+                      <td className={className}>
+                        <Chip
+                          variant="gradient"
+                          color={getStatusColor(status)}
+                          value={getStatusText(status)}
+                          className="py-0.5 px-2 text-[11px] font-medium w-fit"
+                        />
+                      </td>
+                      <td className={className}>
+                        <Typography className="text-xs font-semibold text-blue-gray-600">
+                          {location}
+                        </Typography>
+                      </td>
+                      <td className={className}>
+                        <Typography className="text-xs font-semibold text-blue-gray-600">
+                          {price}
+                        </Typography>
+                      </td>
+                      <td className={className}>
+                        {status === 'available' ? (
+                          reservationInput.rowNumber === _rowNumber ? (
+                            <div className="flex gap-0.5 items-center">
+                              <Input
+                                size="sm"
+                                placeholder="Ditt namn"
+                                value={reservationInput.name}
+                                onChange={(e) => setReservationInput(prev => ({ ...prev, name: e.target.value }))}
+                                className="w-32 !border-blue-gray-200 focus:!border-blue-gray-200 focus:!border-t-blue-gray-200"
+                                labelProps={{
+                                  className: "hidden",
+                                }}
+                                containerProps={{
+                                  className: "!min-w-0",
+                                }}
+                              />
+                              <Button
+                                variant="gradient"
+                                color="green"
+                                size="sm"
+                                onClick={() => confirmReservation({ brand, model, status, location, price, serialNumber, _rowNumber })}
+                                className="px-2 py-1"
+                              >
+                                OK
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                color="gray"
+                                size="sm"
+                                onClick={cancelReservationInput}
+                                className="px-2 py-1"
+                              >
+                                Avbryt
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="gradient"
+                              color="blue"
+                              size="sm"
+                              onClick={() => showReservationInput({ brand, model, status, location, price, serialNumber, _rowNumber })}
+                              className="px-3 py-1"
+                            >
+                              Reservera
+                            </Button>
+                          )
+                        ) : (
+                          <Typography className="text-xs font-semibold text-blue-gray-600">
+                            Går ej att reservera
+                          </Typography>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                }
+              )}
+            </tbody>
+          </table>
+        </CardBody>
+      </Card>
+    );
+  };
   
   // Format value for display
   const formatValue = (value) => {
@@ -116,7 +437,8 @@ export function Tables() {
   
   // Debug log to see what data we're getting
   console.log('Live data:', liveData);
-  console.log('Using available data:', availablePrinters);
+  console.log('Used printers:', usedPrinters.length);
+  console.log('New printers:', newPrinters.length);
   
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
@@ -132,7 +454,7 @@ export function Tables() {
           footer={
             <Typography className="font-normal text-blue-gray-600">
               <strong className="text-green-500">
-                {availablePrinters.filter(p => p.status === 'available').length}
+                {allPrinters.filter(p => p.status === 'available' && !p.reservedBy).length}
               </strong>
               &nbsp;tillgängliga
             </Typography>
@@ -187,145 +509,12 @@ export function Tables() {
           }
         />
       </div>
-      <Card>
-        <CardHeader variant="gradient" color="gray" className="mb-8 p-6">
-          <div className="flex items-center justify-between">
-            <Typography variant="h6" color="white">
-              Skrivare i lager ({totalPrinters}) {loading && <Spinner className="ml-2 h-4 w-4" />}
-            </Typography>
-            <div className="flex items-center gap-2">
-              {error && (
-                <Typography variant="small" color="red" className="mr-2">
-                  Error: {error}
-                </Typography>
-              )}
-              <Button
-                variant="text"
-                color="white"
-                size="sm"
-                onClick={refetch}
-                disabled={loading}
-                className="flex items-center gap-2"
-              >
-                <ArrowPathIcon className="h-4 w-4" />
-                Uppdatera
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-          <table className="w-full min-w-[640px] table-auto">
-            <thead>
-              <tr>
-                {["Märke/Modell", "Status", "Senaste kund", "Lagervärde", ""].map(
-                  (el) => (
-                    <th
-                      key={el}
-                      className="border-b border-blue-gray-50 py-3 px-5 text-left"
-                    >
-                      <Typography
-                        variant="small"
-                        className="text-[11px] font-bold uppercase text-blue-gray-400"
-                      >
-                        {el}
-                      </Typography>
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {availablePrinters.map(
-                ({ brand, model, status, location, price, _rowNumber }, key) => {
-                  const className = `py-3 px-5 ${
-                    key === availablePrinters.length - 1
-                      ? ""
-                      : "border-b border-blue-gray-50"
-                  }`;
-
-                  const getStatusColor = (status) => {
-                    switch (status) {
-                      case "delivered":
-                        return "green";
-                      case "pending":
-                        return "orange";
-                      case "cancelled":
-                        return "red";
-                      case "available":
-                        return "green";
-                      default:
-                        return "blue-gray";
-                    }
-                  };
-
-                  const getStatusText = (status) => {
-                    switch (status) {
-                      case "delivered":
-                        return "Levererad";
-                      case "pending":
-                        return "Ej klar";
-                      case "cancelled":
-                        return "Under lagning";
-                      case "available":
-                        return "Tillgänglig";
-                      default:
-                        return status;
-                    }
-                  };
-
-                  return (
-                    <tr key={`${brand}-${model}-${key}`}>
-                      <td className={className}>
-                        <div>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-semibold"
-                          >
-                            {brand}
-                          </Typography>
-                          <Typography className="text-xs font-normal text-blue-gray-500">
-                            {model}
-                          </Typography>
-                        </div>
-                      </td>
-                      <td className={className}>
-                        <Chip
-                          variant="gradient"
-                          color={getStatusColor(status)}
-                          value={getStatusText(status)}
-                          className="py-0.5 px-2 text-[11px] font-medium w-fit"
-                        />
-                      </td>
-                      <td className={className}>
-                        <Typography className="text-xs font-semibold text-blue-gray-600">
-                          {location}
-                        </Typography>
-                      </td>
-                      <td className={className}>
-                        <Typography className="text-xs font-semibold text-blue-gray-600">
-                          {price}
-                        </Typography>
-                      </td>
-                      <td className={className}>
-                        <Button
-                          variant="gradient"
-                          color="blue"
-                          size="sm"
-                          onClick={() => reservePrinter({ brand, model, status, location, price, _rowNumber })}
-                          className="px-3 py-1"
-                        >
-                          Reservera
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                }
-              )}
-            </tbody>
-          </table>
-        </CardBody>
-      </Card>
+      
+      {/* Begagnade skrivare i lager */}
+      {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray")}
+      
+      {/* Nya skrivare i lager */}
+      {renderPrinterTable(newPrinters, "Nya skrivare i lager", "blue")}
       
       {/* Reserved Printers Table */}
       {reservedPrinters.length > 0 && (
@@ -339,26 +528,54 @@ export function Tables() {
             <table className="w-full min-w-[640px] table-auto">
               <thead>
                 <tr>
-                  {["Märke/Modell", "Status", "Tid kvar", "Senaste kund", "Lagervärde", ""].map(
-                    (el) => (
-                      <th
-                        key={el}
-                        className="border-b border-blue-gray-50 py-3 px-5 text-left"
-                      >
+                  {[
+                    { label: "Märke/Modell", key: "brandModel" },
+                    { label: "Serienummer", key: "serialNumber" },
+                    { label: "Status", key: "status" },
+                    { label: "Säljare", key: "sellerName" },
+                    { label: "Tid kvar", key: null },
+                    { label: "Senaste kund", key: "location" },
+                    { label: "Lagervärde", key: "price" },
+                    { label: "", key: null }
+                  ].map(({ label, key }) => (
+                    <th
+                      key={label}
+                      className={`border-b border-blue-gray-50 py-3 px-5 text-left ${key ? 'cursor-pointer hover:bg-blue-gray-50' : ''}`}
+                      onClick={key ? () => handleSort(key) : undefined}
+                    >
+                      <div className="flex items-center gap-1">
                         <Typography
                           variant="small"
                           className="text-[11px] font-bold uppercase text-blue-gray-400"
                         >
-                          {el}
+                          {label}
                         </Typography>
-                      </th>
-                    )
-                  )}
+                        {key && (
+                          <div className="flex flex-col">
+                            <ChevronUpIcon 
+                              className={`h-3 w-3 ${
+                                sortConfig.key === key && sortConfig.direction === 'asc' 
+                                  ? 'text-blue-500' 
+                                  : 'text-blue-gray-300'
+                              }`}
+                            />
+                            <ChevronDownIcon 
+                              className={`h-3 w-3 ${
+                                sortConfig.key === key && sortConfig.direction === 'desc' 
+                                  ? 'text-blue-500' 
+                                  : 'text-blue-gray-300'
+                              }`}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {reservedPrinters.map(
-                  ({ brand, model, status, location, price, reservedBy, _rowNumber }, key) => {
+                  ({ brand, model, status, location, price, serialNumber, sellerName, reservedBy, _rowNumber }, key) => {
                     const className = `py-3 px-5 ${
                       key === reservedPrinters.length - 1
                         ? ""
@@ -384,36 +601,18 @@ export function Tables() {
                       }
                     };
 
-                    const getStatusText = (status) => {
-                      switch (status) {
-                        case "delivered":
-                          return "Levererad";
-                        case "pending":
-                          return "Ej klar";
-                        case "cancelled":
-                          return "Under lagning";
-                        case "available":
-                          return "Tillgänglig";
-                        default:
-                          return status;
-                      }
-                    };
 
                     return (
                       <tr key={`reserved-${brand}-${model}-${key}`}>
                         <td className={className}>
-                          <div>
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-semibold"
-                            >
-                              {brand}
-                            </Typography>
-                            <Typography className="text-xs font-normal text-blue-gray-500">
-                              {model}
-                            </Typography>
-                          </div>
+                          <Typography className="text-xs font-semibold text-blue-gray-600">
+                            {brand} {model}
+                          </Typography>
+                        </td>
+                        <td className={className}>
+                          <Typography className="text-xs font-semibold text-blue-gray-600">
+                            {serialNumber}
+                          </Typography>
                         </td>
                         <td className={className}>
                           <Chip
@@ -422,6 +621,11 @@ export function Tables() {
                             value="Reserverad"
                             className="py-0.5 px-2 text-[11px] font-medium w-fit"
                           />
+                        </td>
+                        <td className={className}>
+                          <Typography className="text-xs font-semibold text-blue-gray-600">
+                            {sellerName || '-'}
+                          </Typography>
                         </td>
                         <td className={className}>
                           <Typography 
@@ -445,7 +649,7 @@ export function Tables() {
                             variant="outlined"
                             color="red"
                             size="sm"
-                            onClick={() => unreservePrinter({ brand, model, status, location, price, _rowNumber })}
+                            onClick={() => unreservePrinter({ brand, model, status, location, price, serialNumber, sellerName, _rowNumber })}
                             className="px-3 py-1"
                           >
                             Avreservera

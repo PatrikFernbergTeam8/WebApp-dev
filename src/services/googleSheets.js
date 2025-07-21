@@ -136,6 +136,23 @@ function transformToPrinterData(rawData) {
     if (fullModel.includes('IM') || fullModel.includes('MP') || fullModel.includes('Bizhub')) type = 'Multifunktion';
     if (fullModel.includes('Touchpanel')) type = 'Touchpanel';
     
+    // Extract seller name from reservation text
+    const reservedText = row['Reserverad_av'] || '';
+    let sellerName = '';
+    if (reservedText.includes('Reserverad av ')) {
+      const match = reservedText.match(/Reserverad av (.+?) till/);
+      if (match) {
+        sellerName = match[1];
+      }
+    }
+
+    // Determine if printer is new or used (column I)
+    const conditionText = Object.keys(row)[8] ? row[Object.keys(row)[8]] : ''; // Column I (0-indexed = 8)
+    let condition = 'used'; // default to used
+    if (conditionText && conditionText.toLowerCase().includes('ny')) {
+      condition = 'new';
+    }
+
     const result = {
       brand: brand || 'Unknown',
       model: model || 'Unknown',
@@ -144,8 +161,11 @@ function transformToPrinterData(rawData) {
       location: row['Senaste kunden'] || 'Okänd',
       quantity: 1,
       price: row['Värde'] || 'Se avtal',
+      serialNumber: row['Serienummer'] || '-',
+      condition: condition, // new or used
       lastUpdated: new Date().toISOString().split('T')[0],
-      reservedBy: row['Reserverad_av'] || '',
+      reservedBy: reservedText,
+      sellerName: sellerName,
       _rowNumber: row._rowNumber, // Include row number for updates
     };
     
@@ -541,14 +561,19 @@ export async function updateGoogleSheetCell(rowNumber, columnIndex, value) {
 /**
  * Reserve a printer by updating the Reserverad_av column
  */
-export async function reservePrinterInSheet(printer) {
+export async function reservePrinterInSheet(printer, sellerName) {
   if (reservedColumnIndex === -1) {
     console.error('Reserverad_av column not found');
     return false;
   }
   
-  const today = new Date().toISOString().split('T')[0];
-  const reservationText = `Reserverad till ${today}`;
+  const today = new Date();
+  const twoWeeksLater = new Date(today.getTime() + (14 * 24 * 60 * 60 * 1000));
+  const expirationDate = twoWeeksLater.toISOString().split('T')[0];
+  
+  const reservationText = sellerName 
+    ? `Reserverad av ${sellerName} till ${expirationDate}`
+    : `Reserverad till ${expirationDate}`;
   
   return await updateGoogleSheetCell(printer._rowNumber, reservedColumnIndex, reservationText);
 }
