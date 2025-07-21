@@ -6,15 +6,6 @@ MaterialTailwind.displayName = "MaterialTailwindContext";
 
 export function reducer(state, action) {
   switch (action.type) {
-    case "OPEN_SIDENAV": {
-      return { ...state, openSidenav: action.value };
-    }
-    case "SIDENAV_TYPE": {
-      return { ...state, sidenavType: action.value };
-    }
-    case "SIDENAV_COLOR": {
-      return { ...state, sidenavColor: action.value };
-    }
     case "TRANSPARENT_NAVBAR": {
       return { ...state, transparentNavbar: action.value };
     }
@@ -24,9 +15,6 @@ export function reducer(state, action) {
     case "OPEN_CONFIGURATOR": {
       return { ...state, openConfigurator: action.value };
     }
-    case "MINIMIZE_SIDENAV": {
-      return { ...state, minimizedSidenav: action.value };
-    }
     default: {
       throw new Error(`Unhandled action type: ${action.type}`);
     }
@@ -35,13 +23,9 @@ export function reducer(state, action) {
 
 export function MaterialTailwindControllerProvider({ children }) {
   const initialState = {
-    openSidenav: false,
-    sidenavColor: "gray",
-    sidenavType: "white",
     transparentNavbar: true,
     fixedNavbar: false,
     openConfigurator: false,
-    minimizedSidenav: false,
   };
 
   const [controller, dispatch] = React.useReducer(reducer, initialState);
@@ -75,17 +59,9 @@ MaterialTailwindControllerProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-export const setOpenSidenav = (dispatch, value) =>
-  dispatch({ type: "OPEN_SIDENAV", value });
-export const setSidenavType = (dispatch, value) =>
-  dispatch({ type: "SIDENAV_TYPE", value });
-export const setSidenavColor = (dispatch, value) =>
-  dispatch({ type: "SIDENAV_COLOR", value });
 export const setTransparentNavbar = (dispatch, value) =>
   dispatch({ type: "TRANSPARENT_NAVBAR", value });
 export const setFixedNavbar = (dispatch, value) =>
   dispatch({ type: "FIXED_NAVBAR", value });
 export const setOpenConfigurator = (dispatch, value) =>
   dispatch({ type: "OPEN_CONFIGURATOR", value });
-export const setMinimizedSidenav = (dispatch, value) =>
-  dispatch({ type: "MINIMIZE_SIDENAV", value });

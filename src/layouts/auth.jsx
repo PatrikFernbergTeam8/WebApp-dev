@@ -34,7 +34,8 @@ export function Auth() {
 
   return (
     <div className="relative min-h-screen w-full">
-      <Routes>
+      <div className="px-6 max-w-7xl mx-auto">
+        <Routes>
         {routes.map(
           ({ layout, pages }) =>
             layout === "auth" &&
@@ -42,7 +43,8 @@ export function Auth() {
               <Route exact path={path} element={element} />
             ))
         )}
-      </Routes>
+        </Routes>
+      </div>
     </div>
   );
 }
