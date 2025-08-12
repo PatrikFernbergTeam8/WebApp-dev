@@ -12,7 +12,7 @@ import {
   Input,
 } from "@material-tailwind/react";
 import { EllipsisVerticalIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
-import { BanknotesIcon, UsersIcon, UserPlusIcon, ChartBarIcon, PrinterIcon, CurrencyDollarIcon, BookmarkIcon, WrenchScrewdriverIcon, HandRaisedIcon } from "@heroicons/react/24/solid";
+import { BanknotesIcon, UsersIcon, UserPlusIcon, ChartBarIcon, PrinterIcon, CurrencyDollarIcon, BookmarkIcon, WrenchScrewdriverIcon, HandRaisedIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import { printersInventoryData } from "@/data";
 import React, { useState, useEffect } from "react";
 import { StatisticsCard } from "@/widgets/cards";
@@ -243,7 +243,7 @@ export function Tables() {
   
   // Calculate statistics
   const totalPrinters = usedPrinters.length + soldPrinters.length;
-  const totalReserved = allPrinters.filter(printer => printer.reservedBy).length;
+  const totalReserved = allPrinters.filter(printer => printer.reservedBy && printer.condition !== 'sold').length;
   
   // Calculate total inventory value (all printers regardless of status or reservation)
   const totalValue = allPrinters.reduce((sum, printer) => {
@@ -570,7 +570,7 @@ export function Tables() {
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between gap-8">
             {/* Statistics */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 flex-1">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-8 flex-1">
               {/* Skrivare i lager */}
               <div className="group hover:scale-105 transition-transform duration-300">
                 <div className="rounded-xl p-4 text-white relative overflow-hidden">
@@ -611,6 +611,21 @@ export function Tables() {
                     </Typography>
                     <Typography variant="h3" className="font-bold">
                       {totalReserved}
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Sålda */}
+              <div className="group hover:scale-105 transition-transform duration-300">
+                <div className="rounded-xl p-4 text-white relative overflow-hidden">
+                  <div className="relative z-10">
+                    <CheckCircleIcon className="w-12 h-12 mb-4 opacity-90" />
+                    <Typography variant="h6" className="opacity-90 mb-2">
+                      Sålda
+                    </Typography>
+                    <Typography variant="h3" className="font-bold">
+                      {soldPrinters.length}
                     </Typography>
                   </div>
                 </div>
