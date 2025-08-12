@@ -21,7 +21,7 @@ export function Leveransstatus() {
       {/* Combined Statistics - Full Width Background */}
       <div className="relative mb-12 py-20 w-full bg-[url('/img/background-image.png')] bg-cover bg-center">
         <div className="relative z-10 max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-between gap-8">
             {/* Statistics */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-8 flex-1">
               {/* Skrivare i lager */}
