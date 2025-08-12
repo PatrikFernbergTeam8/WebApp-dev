@@ -12,9 +12,8 @@ import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
 export function Dashboard() {
   const [controller, dispatch] = useMaterialTailwindController();
   const location = useLocation();
-  const isHomePage = location.pathname === "/" || location.pathname === "/dashboard/home";
   const isTablesPage = location.pathname === "/dashboard/tables";
-  const isFullWidthPage = isHomePage || isTablesPage;
+  const isFullWidthPage = isTablesPage;
 
   return (
     <div className="min-h-screen bg-blue-gray-50/50">

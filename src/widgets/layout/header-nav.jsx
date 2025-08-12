@@ -52,7 +52,7 @@ export function HeaderNav({ brandName, routes }) {
         
         {/* Left: Logo and Brand */}
         <div className="flex items-center gap-4">
-          <Link to="/dashboard/home" className="flex items-center gap-3">
+          <Link to="/dashboard/tables" className="flex items-center gap-3">
             <img 
               src="/img/logo_svart.png" 
               alt="Logo" 
