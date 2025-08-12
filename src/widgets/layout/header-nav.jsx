@@ -1,28 +1,20 @@
 import PropTypes from "prop-types";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import {
   Navbar,
   Typography,
   Button,
   IconButton,
-  Input,
   Menu,
   MenuHandler,
   MenuList,
   MenuItem,
-  Avatar,
-  Card,
-  List,
-  ListItem,
   Collapse,
 } from "@material-tailwind/react";
 import {
   UserCircleIcon,
   Cog6ToothIcon,
-  BellIcon,
-  ClockIcon,
-  CreditCardIcon,
   Bars3Icon,
   XMarkIcon,
   ChevronDownIcon,
@@ -38,71 +30,9 @@ export function HeaderNav({ brandName, routes }) {
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Search functionality
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  const searchRef = useRef(null);
 
-  // Get all searchable pages from routes
-  const getSearchablePages = () => {
-    const pages = [];
-    routes.forEach(route => {
-      if (route.layout === "dashboard" && route.pages) {
-        route.pages.forEach(page => {
-          pages.push({
-            name: page.name,
-            path: `/${route.layout}${page.path}`,
-            icon: page.icon
-          });
-        });
-      }
-    });
-    return pages;
-  };
 
-  // Handle search
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
 
-    const searchablePages = getSearchablePages();
-    const filtered = searchablePages.filter(page =>
-      page.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    
-    setSearchResults(filtered);
-    setShowResults(filtered.length > 0);
-  }, [searchQuery]);
-
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  // Handle result selection
-  const handleResultSelect = (path) => {
-    navigate(path);
-    setSearchQuery("");
-    setShowResults(false);
-  };
-
-  // Close results when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowResults(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   // Get main navigation items and sections
   const mainRoutes = routes.find(route => route.layout === "dashboard" && !route.title)?.pages || [];
@@ -189,70 +119,7 @@ export function HeaderNav({ brandName, routes }) {
         {/* Right: Search, User Controls, Mobile Menu */}
         <div className="flex items-center gap-2">
           
-          {/* Search - Hidden on mobile */}
-          <div className="hidden md:block relative" ref={searchRef}>
-            <Input 
-              label="Sök sidor..."
-              size="md"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={() => searchQuery && setShowResults(true)}
-              className="!min-w-[200px]"
-            />
-            {showResults && (
-              <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-64 overflow-y-auto">
-                <List className="p-0">
-                  {searchResults.map((result, index) => (
-                    <ListItem
-                      key={index}
-                      className="flex items-center gap-3 hover:bg-blue-gray-50 cursor-pointer"
-                      onClick={() => handleResultSelect(result.path)}
-                    >
-                      {result.icon && <span className="text-blue-gray-500">{result.icon}</span>}
-                      <Typography variant="small" color="blue-gray" className="font-medium capitalize">
-                        {result.name}
-                      </Typography>
-                    </ListItem>
-                  ))}
-                </List>
-              </Card>
-            )}
-          </div>
 
-          {/* Notifications */}
-          <Menu>
-            <MenuHandler>
-              <IconButton variant="text" color="blue-gray" size="sm">
-                <BellIcon className="h-5 w-5" />
-              </IconButton>
-            </MenuHandler>
-            <MenuList className="w-max border-0">
-              <MenuItem className="flex items-center gap-3">
-                <Avatar
-                  src="https://demos.creative-tim.com/material-dashboard/assets/img/team-2.jpg"
-                  alt="notification"
-                  size="sm"
-                  variant="circular"
-                />
-                <div>
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="mb-1 font-normal"
-                  >
-                    <strong>New message</strong> from Laur
-                  </Typography>
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="flex items-center gap-1 text-xs font-normal opacity-60"
-                  >
-                    <ClockIcon className="h-3.5 w-3.5" /> 13 minutes ago
-                  </Typography>
-                </div>
-              </MenuItem>
-            </MenuList>
-          </Menu>
 
           {/* Settings */}
           <IconButton
@@ -306,15 +173,6 @@ export function HeaderNav({ brandName, routes }) {
       <Collapse open={mobileMenuOpen} className="lg:hidden">
         <div className="px-4 py-4 border-t border-blue-gray-100">
           
-          {/* Mobile Search */}
-          <div className="mb-4" ref={searchRef}>
-            <Input 
-              label="Sök sidor..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={() => searchQuery && setShowResults(true)}
-            />
-          </div>
 
           {/* Mobile Navigation Links */}
           <div className="space-y-2">
