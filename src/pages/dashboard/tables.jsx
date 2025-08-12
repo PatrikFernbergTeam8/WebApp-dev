@@ -561,7 +561,7 @@ export function Tables() {
   // Debug log to see what data we're getting
   console.log('Live data:', liveData);
   console.log('Used printers:', usedPrinters.length);
-  console.log('New printers:', newPrinters.length);
+  console.log('Sold printers:', soldPrinters.length);
   
   return (
     <div className="mb-8">
