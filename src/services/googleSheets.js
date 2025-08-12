@@ -581,8 +581,8 @@ export async function reservePrinterInSheet(printer, sellerName) {
   }
   
   const today = new Date();
-  const twoWeeksLater = new Date(today.getTime() + (14 * 24 * 60 * 60 * 1000));
-  const expirationDate = twoWeeksLater.toISOString().split('T')[0];
+  const oneWeekLater = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
+  const expirationDate = oneWeekLater.toISOString().split('T')[0];
   
   const reservationText = sellerName 
     ? `Reserverad av ${sellerName} till ${expirationDate}`

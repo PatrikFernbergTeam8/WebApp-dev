@@ -206,6 +206,28 @@ export function Tables() {
       console.error('Error unreserving printer:', error);
     }
   };
+
+  // Function to parse reservation info and check if expired
+  const parseReservationInfo = (reservedBy) => {
+    if (!reservedBy) return null;
+    
+    const reservationMatch = reservedBy.match(/Reserverad av (.+?) till (\d{4}-\d{2}-\d{2})/);
+    if (reservationMatch) {
+      const [, name, dateString] = reservationMatch;
+      const expiryDate = new Date(dateString);
+      const today = new Date();
+      const isExpired = expiryDate < today;
+      
+      return {
+        name,
+        expiryDate: dateString,
+        isExpired,
+        daysLeft: Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24))
+      };
+    }
+    
+    return null;
+  };
   
   // Calculate statistics
   const totalPrinters = usedPrinters.length + newPrinters.length;
@@ -392,12 +414,40 @@ export function Tables() {
                         <td className={className}>
                           {/* Check if printer is reserved or sold */}
                           {allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy ? (
-                            <Typography className="text-sm font-semibold text-blue-gray-700">
-                              {allPrinters.find(p => p._rowNumber === _rowNumber)?.isSold ? 
-                                `Såld till ${allPrinters.find(p => p._rowNumber === _rowNumber)?.customerName || 'okänd kund'}` : 
-                                allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy
+                            (() => {
+                              const printer = allPrinters.find(p => p._rowNumber === _rowNumber);
+                              if (printer?.isSold) {
+                                return (
+                                  <Typography className="text-sm font-semibold text-blue-gray-700">
+                                    {`Såld till ${printer?.customerName || 'okänd kund'}`}
+                                  </Typography>
+                                );
                               }
-                            </Typography>
+                              
+                              const reservationInfo = parseReservationInfo(printer?.reservedBy);
+                              if (reservationInfo) {
+                                const { name, expiryDate, isExpired, daysLeft } = reservationInfo;
+                                return (
+                                  <div className="flex flex-col">
+                                    <Typography className={`text-xs font-semibold ${isExpired ? 'text-red-700' : 'text-blue-gray-700'}`}>
+                                      Reserverad av {name}
+                                    </Typography>
+                                    <Typography className={`text-xs ${isExpired ? 'text-red-600' : daysLeft <= 2 ? 'text-orange-600' : 'text-green-600'}`}>
+                                      {isExpired ? 
+                                        `Utgick ${expiryDate}` : 
+                                        `Utgår ${expiryDate} (${daysLeft} ${daysLeft === 1 ? 'dag' : 'dagar'} kvar)`
+                                      }
+                                    </Typography>
+                                  </div>
+                                );
+                              }
+                              
+                              return (
+                                <Typography className="text-sm font-semibold text-blue-gray-700">
+                                  {printer?.reservedBy}
+                                </Typography>
+                              );
+                            })()
                           ) : (
                             /* Show reservation input or button only for available printers */
                             status === 'available' ? (
