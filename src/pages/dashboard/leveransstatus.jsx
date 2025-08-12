@@ -1,5 +1,7 @@
 import {
   Typography,
+  Button,
+  Input,
 } from "@material-tailwind/react";
 import { BanknotesIcon, UsersIcon, UserPlusIcon, ChartBarIcon, PrinterIcon, CurrencyDollarIcon, BookmarkIcon, WrenchScrewdriverIcon, HandRaisedIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import React from "react";
@@ -97,6 +99,37 @@ export function Leveransstatus() {
                     </Typography>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Search Section */}
+            <div className="flex flex-col gap-3 w-1/3 min-w-[300px]">
+              <Typography variant="h6" className="font-semibold text-white">
+                Sök leveranser
+              </Typography>
+              <div className="flex items-center gap-3">
+                <Input
+                  placeholder="Sök på kund, ordernummer..."
+                  className="!border-white/30 focus:!border-white focus:!border-t-white w-full rounded-lg !text-white placeholder:!text-white/70 bg-white/10"
+                  labelProps={{
+                    className: "hidden",
+                  }}
+                  containerProps={{
+                    className: "!min-w-0",
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  size="sm"
+                  className="px-4 py-2 rounded-lg border-white/30 text-white hover:bg-white/10 transition-all duration-200"
+                >
+                  Rensa
+                </Button>
+              </div>
+              <div className="bg-black/20 rounded-lg p-3">
+                <Typography variant="small" className="text-sm font-medium text-white">
+                  Inga resultat
+                </Typography>
               </div>
             </div>
           </div>
