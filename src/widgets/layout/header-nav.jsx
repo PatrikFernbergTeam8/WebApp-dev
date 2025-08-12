@@ -48,7 +48,7 @@ export function HeaderNav({ brandName, routes }) {
       fullWidth
       blurred={fixedNavbar}
     >
-      <div className="flex items-center justify-between px-4 py-2">
+      <div className="relative flex items-center justify-between px-4 py-2">
         
         {/* Left: Logo and Brand */}
         <div className="flex items-center gap-4">
@@ -61,8 +61,8 @@ export function HeaderNav({ brandName, routes }) {
           </Link>
         </div>
 
-        {/* Center: Desktop Navigation */}
-        <div className="hidden lg:flex items-center justify-center gap-1 flex-1">
+        {/* Center: Desktop Navigation - Absolutely positioned */}
+        <div className="hidden lg:flex items-center gap-1 absolute left-1/2 transform -translate-x-1/2">
           {/* Main navigation items */}
           {mainRoutes.map(({ icon, name, path }) => (
             <NavLink key={name} to={`/dashboard${path}`}>
