@@ -693,6 +693,29 @@ export function Tables() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-blue-900/40 to-purple-900/50"></div>
       </div>
 
+      {/* Information section for salespeople */}
+      <div className="max-w-7xl mx-auto px-6 mb-8">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+              </svg>
+            </div>
+            <div>
+              <Typography variant="h6" color="blue-gray" className="mb-2 font-semibold">
+                Information för säljare
+              </Typography>
+              <Typography variant="paragraph" color="blue-gray" className="text-sm leading-relaxed">
+                <strong>Så här fungerar systemet:</strong> När du skickar ett avtal för signering till kunden kan du reservera en skrivare i <strong>7 dagar</strong> genom att klicka på "Reservera" och ange ditt namn. 
+                När leveransformuläret skickas in hamnar skrivaren automatiskt under <strong>"Såld"</strong> status, så länge detta görs inom de 7 dagar som skrivaren är reserverad. 
+                Reservationer som närmar sig utgångsdatum visas med färgkodning för att påminna dig.
+              </Typography>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-8xl mx-auto px-6 flex flex-col gap-12">
         {/* Begagnade skrivare i lager */}
         {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray", false, true)}
