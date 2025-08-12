@@ -669,7 +669,7 @@ export function Tables() {
         {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray", false, true)}
         
         {/* Sålda skrivare i lager */}
-        {renderPrinterTable(newPrinters, "Sålda skrivare i lager", "blue", true, false)}
+        {renderPrinterTable(newPrinters, "sålda skrivare i lager", "blue", true, false)}
       </div>
     </div>
   );
