@@ -307,7 +307,7 @@ export function Tables() {
           </div>
         <CardBody className="p-6">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] table-auto">
+            <table className="w-full min-w-[900px] table-auto">
               <thead>
                 <tr className="bg-gray-50/50">
                   {[
@@ -664,7 +664,7 @@ export function Tables() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-blue-900/40 to-purple-900/50"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 flex flex-col gap-12">
+      <div className="max-w-8xl mx-auto px-6 flex flex-col gap-12">
         {/* Begagnade skrivare i lager */}
         {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray", false, true)}
         
