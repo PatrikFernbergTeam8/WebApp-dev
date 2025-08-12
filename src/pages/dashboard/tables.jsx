@@ -576,7 +576,7 @@ export function Tables() {
                 <div className="rounded-xl p-4 text-white relative overflow-hidden">
                   <div className="relative z-10">
                     <PrinterIcon className="w-12 h-12 mb-4 opacity-90" />
-                    <Typography variant="h6" className="opacity-90 mb-2">
+                    <Typography variant="h6" className="opacity-90 mb-2 whitespace-nowrap">
                       Skrivare i lager
                     </Typography>
                     <Typography variant="h3" className="font-bold">
