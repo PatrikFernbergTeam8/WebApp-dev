@@ -129,13 +129,6 @@ export function HeaderNav({ brandName, routes }) {
               alt="Logo" 
               className="h-10 w-auto object-contain"
             />
-            <Typography
-              variant="h5"
-              color="blue-gray"
-              className="font-bold hidden sm:block"
-            >
-              {brandName}
-            </Typography>
           </Link>
         </div>
 
