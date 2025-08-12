@@ -62,7 +62,7 @@ export function HeaderNav({ brandName, routes }) {
         </div>
 
         {/* Center: Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="hidden lg:flex items-center justify-center gap-1 flex-1">
           {/* Main navigation items */}
           {mainRoutes.map(({ icon, name, path }) => (
             <NavLink key={name} to={`/dashboard${path}`}>
