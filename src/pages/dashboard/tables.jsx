@@ -77,6 +77,14 @@ export function Tables() {
           aValue = (a.sellerName || '').toLowerCase();
           bValue = (b.sellerName || '').toLowerCase();
           break;
+        case 'rakneverkSV':
+          aValue = (a.rakneverkSV || '').toLowerCase();
+          bValue = (b.rakneverkSV || '').toLowerCase();
+          break;
+        case 'rakneverkFarg':
+          aValue = (a.rakneverkFarg || '').toLowerCase();
+          bValue = (b.rakneverkFarg || '').toLowerCase();
+          break;
         case 'price':
           // Extract numeric value for price sorting
           const extractPrice = (price) => {
@@ -252,7 +260,7 @@ export function Tables() {
   console.log('Total value:', totalValue);
 
   // Function to render a printer table
-  const renderPrinterTable = (printers, title, headerColor = "gray", isNewPrintersTable = false) => {
+  const renderPrinterTable = (printers, title, headerColor = "gray", isNewPrintersTable = false, showRakneverk = false) => {
     const getGradientClass = (isNewPrintersTable) => {
       return isNewPrintersTable 
         ? "bg-gradient-to-r from-blue-500 to-blue-600" 
@@ -307,6 +315,10 @@ export function Tables() {
                     { label: "Serienummer", key: "serialNumber" },
                     { label: "Status", key: "status" },
                     { label: isNewPrintersTable ? "Säljare" : "Senaste kund", key: isNewPrintersTable ? "sellerName" : "location" },
+                    ...(showRakneverk ? [
+                      { label: "Räkneverk S/V", key: "rakneverkSV" },
+                      { label: "Räkneverk Färg", key: "rakneverkFarg" }
+                    ] : []),
                     { label: "Lagervärde", key: "price" },
                     { label: "", key: null }
                   ].map(({ label, key }) => (
@@ -347,7 +359,7 @@ export function Tables() {
               </thead>
               <tbody>
                 {printers.map(
-                  ({ brand, model, status, location, price, serialNumber, sellerName, customerName, isSold, _rowNumber }, key) => {
+                  ({ brand, model, status, location, price, serialNumber, sellerName, customerName, isSold, rakneverkSV, rakneverkFarg, _rowNumber }, key) => {
                     const className = `py-2 px-4 ${
                       key === printers.length - 1
                         ? ""
@@ -406,6 +418,20 @@ export function Tables() {
                             {isNewPrintersTable && sellerName ? sellerName : location}
                           </Typography>
                         </td>
+                        {showRakneverk && (
+                          <>
+                            <td className={className}>
+                              <Typography className="text-sm font-semibold text-blue-gray-700">
+                                {rakneverkSV || '-'}
+                              </Typography>
+                            </td>
+                            <td className={className}>
+                              <Typography className="text-sm font-semibold text-blue-gray-700">
+                                {rakneverkFarg || '-'}
+                              </Typography>
+                            </td>
+                          </>
+                        )}
                         <td className={className}>
                           <Typography className="text-sm font-semibold text-blue-gray-700">
                             {price}
@@ -640,10 +666,10 @@ export function Tables() {
 
       <div className="max-w-7xl mx-auto px-6 flex flex-col gap-12">
         {/* Begagnade skrivare i lager */}
-        {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray")}
+        {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray", false, true)}
         
-        {/* Nya skrivare i lager */}
-        {renderPrinterTable(newPrinters, "Nya skrivare i lager", "blue", true)}
+        {/* Sålda skrivare i lager */}
+        {renderPrinterTable(newPrinters, "Sålda skrivare i lager", "blue", true, false)}
       </div>
     </div>
   );

@@ -164,6 +164,10 @@ function transformToPrinterData(rawData) {
     // Extract customer name from column O (0-indexed = 14)
     const customerName = Object.keys(row)[14] ? row[Object.keys(row)[14]] : '';
 
+    // Extract Räkneverk data from columns J (0-indexed = 9) and K (0-indexed = 10)
+    const rakneverkSV = Object.keys(row)[9] ? row[Object.keys(row)[9]] : '';
+    const rakneverkFarg = Object.keys(row)[10] ? row[Object.keys(row)[10]] : '';
+
     const result = {
       brand: brand || 'Unknown',
       model: model || 'Unknown',
@@ -179,6 +183,8 @@ function transformToPrinterData(rawData) {
       sellerName: sellerName,
       customerName: customerName,
       isSold: isSold,
+      rakneverkSV: rakneverkSV, // Column J - Räkneverk S/V
+      rakneverkFarg: rakneverkFarg, // Column K - Räkneverk Färg
       _rowNumber: row._rowNumber, // Include row number for updates
     };
     
