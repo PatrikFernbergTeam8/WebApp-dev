@@ -154,15 +154,15 @@ function transformToPrinterData(rawData) {
       }
     }
 
-    // Determine if printer is new or used (column I)
-    const conditionText = Object.keys(row)[8] ? row[Object.keys(row)[8]] : ''; // Column I (0-indexed = 8)
-    let condition = 'used'; // default to used
-    if (conditionText && conditionText.toLowerCase().includes('ny')) {
-      condition = 'new';
-    }
-
     // Extract customer name from column O (0-indexed = 14)
     const customerName = Object.keys(row)[14] ? row[Object.keys(row)[14]] : '';
+
+    // Check if printer is sold (column P - 0-indexed = 15)
+    const soldText = Object.keys(row)[15] ? row[Object.keys(row)[15]] : ''; // Column P
+    const isSoldItem = soldText && soldText.toLowerCase().includes('såld');
+    
+    // Determine condition based on sold status
+    let condition = isSoldItem ? 'sold' : 'used';
 
     // Extract Räkneverk data from columns J (0-indexed = 9) and K (0-indexed = 10)
     const rakneverkSV = Object.keys(row)[9] ? row[Object.keys(row)[9]] : '';

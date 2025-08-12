@@ -85,6 +85,10 @@ export function Tables() {
           aValue = (a.rakneverkFarg || '').toLowerCase();
           bValue = (b.rakneverkFarg || '').toLowerCase();
           break;
+        case 'customerName':
+          aValue = (a.customerName || '').toLowerCase();
+          bValue = (b.customerName || '').toLowerCase();
+          break;
         case 'price':
           // Extract numeric value for price sorting
           const extractPrice = (price) => {
@@ -156,7 +160,7 @@ export function Tables() {
 
   // Separate, filter, and sort printers based on condition and search query
   const usedPrinters = sortPrinters(filterPrinters(allPrinters.filter(printer => printer.condition === 'used')));
-  const newPrinters = sortPrinters(filterPrinters(allPrinters.filter(printer => printer.condition === 'new')));
+  const soldPrinters = sortPrinters(filterPrinters(allPrinters.filter(printer => printer.condition === 'sold')));
   
   
   // Function to show reservation input
@@ -238,7 +242,7 @@ export function Tables() {
   };
   
   // Calculate statistics
-  const totalPrinters = usedPrinters.length + newPrinters.length;
+  const totalPrinters = usedPrinters.length + soldPrinters.length;
   const totalReserved = allPrinters.filter(printer => printer.reservedBy).length;
   
   // Calculate total inventory value (all printers regardless of status or reservation)
@@ -255,7 +259,7 @@ export function Tables() {
   // Debug log
   console.log('All printers for value calculation:', allPrinters.length);
   console.log('Used printers:', usedPrinters.length);
-  console.log('New printers:', newPrinters.length);
+  console.log('Sold printers:', soldPrinters.length);
   console.log('Reserved printers:', totalReserved);
   console.log('Total value:', totalValue);
 
@@ -320,7 +324,7 @@ export function Tables() {
                       { label: "Räkneverk Färg", key: "rakneverkFarg" }
                     ] : []),
                     { label: "Lagervärde", key: "price" },
-                    { label: "", key: null }
+                    ...(isNewPrintersTable ? [{ label: "Såld", key: "customerName" }] : [{ label: "", key: null }])
                   ].map(({ label, key }) => (
                     <th
                       key={label}
@@ -439,7 +443,14 @@ export function Tables() {
                             {price}
                           </Typography>
                         </td>
-                        <td className={className}>
+                        {isNewPrintersTable ? (
+                          <td className={className}>
+                            <Typography className="text-sm font-semibold text-blue-gray-700">
+                              {customerName ? `Såld till ${customerName}` : 'Såld'}
+                            </Typography>
+                          </td>
+                        ) : (
+                          <td className={className}>
                           {/* Check if printer is reserved or sold */}
                           {allPrinters.find(p => p._rowNumber === _rowNumber)?.reservedBy ? (
                             (() => {
@@ -521,7 +532,8 @@ export function Tables() {
                               </span>
                             )
                           )}
-                        </td>
+                          </td>
+                        )}
                     </tr>
                   );
                 }
@@ -652,8 +664,8 @@ export function Tables() {
               {searchQuery && (
                 <div className="bg-black/20 rounded-lg p-3">
                   <Typography variant="small" className="text-sm font-medium text-white">
-                    {(usedPrinters.length + newPrinters.length) > 0 ? 
-                      `${usedPrinters.length + newPrinters.length} resultat funna` : 
+                    {(usedPrinters.length + soldPrinters.length) > 0 ? 
+                      `${usedPrinters.length + soldPrinters.length} resultat funna` : 
                       'Inga resultat'
                     }
                   </Typography>
@@ -671,7 +683,7 @@ export function Tables() {
         {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray", false, true)}
         
         {/* Sålda skrivare i lager */}
-        {renderPrinterTable(newPrinters, "sålda skrivare i lager", "blue", true, false)}
+        {renderPrinterTable(soldPrinters, "sålda skrivare i lager", "blue", true, false)}
       </div>
     </div>
   );
