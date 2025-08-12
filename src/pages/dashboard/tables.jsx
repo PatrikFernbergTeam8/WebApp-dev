@@ -314,7 +314,7 @@ export function Tables() {
                     { label: "Märke/Modell", key: "brandModel" },
                     { label: "Serienummer", key: "serialNumber" },
                     { label: "Status", key: "status" },
-                    { label: isNewPrintersTable ? "Säljare" : "Senaste kund", key: isNewPrintersTable ? "sellerName" : "location" },
+                    ...(!isNewPrintersTable ? [{ label: "Senaste kund", key: "location" }] : []),
                     ...(showRakneverk ? [
                       { label: "Räkneverk S/V", key: "rakneverkSV" },
                       { label: "Räkneverk Färg", key: "rakneverkFarg" }
@@ -413,11 +413,13 @@ export function Tables() {
                             {getStatusText(status)}
                           </span>
                         </td>
-                        <td className={className}>
-                          <Typography className="text-sm font-semibold text-blue-gray-700">
-                            {isNewPrintersTable && sellerName ? sellerName : location}
-                          </Typography>
-                        </td>
+                        {!isNewPrintersTable && (
+                          <td className={className}>
+                            <Typography className="text-sm font-semibold text-blue-gray-700">
+                              {location}
+                            </Typography>
+                          </td>
+                        )}
                         {showRakneverk && (
                           <>
                             <td className={className}>
