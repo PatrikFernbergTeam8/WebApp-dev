@@ -13,7 +13,6 @@ import {
   Collapse,
 } from "@material-tailwind/react";
 import {
-  UserCircleIcon,
   Cog6ToothIcon,
   Bars3Icon,
   XMarkIcon,
@@ -131,26 +130,6 @@ export function HeaderNav({ brandName, routes }) {
             <Cog6ToothIcon className="h-5 w-5" />
           </IconButton>
 
-          {/* Sign In */}
-          <Link to="/auth/sign-in">
-            <Button
-              variant="text"
-              color="blue-gray"
-              size="sm"
-              className="hidden xl:flex items-center gap-1 px-4 normal-case"
-            >
-              <UserCircleIcon className="h-4 w-4" />
-              Sign In
-            </Button>
-            <IconButton
-              variant="text"
-              color="blue-gray"
-              size="sm"
-              className="xl:hidden"
-            >
-              <UserCircleIcon className="h-5 w-5" />
-            </IconButton>
-          </Link>
 
           {/* Mobile Menu Toggle */}
           <IconButton

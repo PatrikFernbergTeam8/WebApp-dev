@@ -3,13 +3,12 @@ import {
   UserCircleIcon,
   TableCellsIcon,
   InformationCircleIcon,
-  ServerStackIcon,
   RectangleStackIcon,
   QrCodeIcon,
   PrinterIcon,
 } from "@heroicons/react/24/solid";
 import { Home, Sida3 as Profile, Tables, Sida1 as Notifications, Sida2 as SkannaTillX } from "@/pages/dashboard";
-import { SignIn, SignUp } from "@/pages/auth";
+import { SignUp } from "@/pages/auth";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -60,12 +59,6 @@ export const routes = [
   {
     layout: "auth",
     pages: [
-      {
-        icon: <ServerStackIcon {...icon} />,
-        name: "sign in",
-        path: "/sign-in",
-        element: <SignIn />,
-      },
       {
         icon: <RectangleStackIcon {...icon} />,
         name: "sign up",
