@@ -59,15 +59,16 @@ export function Tables() {
           bValue = (b.serialNumber || '').toLowerCase();
           break;
         case 'status':
-          // Custom status order: Tillgänglig, Ej klar, Under lagning, Levererad
+          // Custom status order: Tillgänglig, Ej klar, Under lagning, Levererad, Såld
           const statusOrder = {
             'tillgänglig': 1,
             'inväntar rekond': 2,
             'under lagning': 3,
-            'levererad': 4
+            'levererad': 4,
+            'såld': 5
           };
-          aValue = statusOrder[getStatusText(a.status).toLowerCase()] || 5;
-          bValue = statusOrder[getStatusText(b.status).toLowerCase()] || 5;
+          aValue = statusOrder[getStatusText(a.status, a.condition).toLowerCase()] || 5;
+          bValue = statusOrder[getStatusText(b.status, b.condition).toLowerCase()] || 5;
           break;
         case 'location':
           aValue = (a.location || '').toLowerCase();
@@ -125,7 +126,12 @@ export function Tables() {
   };
   
   // Get status text function (moved up to be available for filtering)
-  const getStatusText = (status) => {
+  const getStatusText = (status, condition) => {
+    // If the printer is sold, always show "Såld"
+    if (condition === 'sold') {
+      return "Såld";
+    }
+    
     switch (status) {
       case "delivered":
         return "Levererad";
@@ -385,7 +391,12 @@ export function Tables() {
                       }
                     };
 
-                    const getStatusGradient = (status) => {
+                    const getStatusGradient = (status, condition) => {
+                      // If the printer is sold, use purple colors
+                      if (condition === 'sold') {
+                        return "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800";
+                      }
+                      
                       switch (status) {
                         case "delivered":
                           return "bg-gradient-to-r from-green-100 to-green-200 text-green-800";
@@ -413,8 +424,8 @@ export function Tables() {
                           </Typography>
                         </td>
                         <td className={className}>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusGradient(status)}`}>
-                            {getStatusText(status)}
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusGradient(status, allPrinters.find(p => p._rowNumber === _rowNumber)?.condition)}`}>
+                            {getStatusText(status, allPrinters.find(p => p._rowNumber === _rowNumber)?.condition)}
                           </span>
                         </td>
                         {!isNewPrintersTable && (
@@ -721,7 +732,7 @@ export function Tables() {
         {renderPrinterTable(usedPrinters, "Begagnade skrivare i lager", "gray", false, true)}
         
         {/* Sålda skrivare i lager */}
-        {renderPrinterTable(soldPrinters, "sålda skrivare i lager", "blue", true, false)}
+        {renderPrinterTable(soldPrinters, "Sålda skrivare i lager", "blue", true, false)}
       </div>
     </div>
   );
