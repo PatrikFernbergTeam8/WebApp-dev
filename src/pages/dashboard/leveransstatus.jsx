@@ -137,8 +137,7 @@ export function Leveransstatus() {
   return (
     <div className="mb-8">
 
-      {/* Delivery Table */}
-      <div className="max-w-8xl mx-auto px-6">
+      <div className="max-w-8xl mx-auto px-6 flex flex-col gap-12">
         <div className="flex items-center justify-between mb-8">
           <Typography variant="h4" color="blue-gray" className="font-bold">
             Pågående Leveranser ({deliveries.length})
