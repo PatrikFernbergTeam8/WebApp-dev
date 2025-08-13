@@ -1,13 +1,13 @@
 import {
   Card,
-  CardHeader,
   CardBody,
   Typography,
   Chip,
   Button,
   Spinner,
+  Collapse,
 } from "@material-tailwind/react";
-import { ArrowPathIcon, TruckIcon, PhoneIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, TruckIcon, PhoneIcon, EnvelopeIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { CalendarDaysIcon, BuildingOfficeIcon, UserIcon } from "@heroicons/react/24/solid";
 import React, { useState, useEffect } from "react";
 
@@ -15,6 +15,7 @@ export function Leveransstatus() {
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedRows, setExpandedRows] = useState({});
 
   // Mock data baserat på Trello-strukturen
   const mockDeliveries = [
@@ -126,47 +127,18 @@ export function Leveransstatus() {
     }
   };
 
-  const getListColor = (listName) => {
-    switch (listName) {
-      case "Ny leverans skapad":
-        return "bg-blue-50 border-blue-200";
-      case "Uppstartsmöte bokat":
-        return "bg-orange-50 border-orange-200";
-      case "Skrivare hos Safe och Prel. leveransdatum bokat":
-        return "bg-green-50 border-green-200";
-      case "Leveransdatum bekräftat":
-        return "bg-purple-50 border-purple-200";
-      case "Eftermarknad":
-        return "bg-gray-50 border-gray-200";
-      default:
-        return "bg-gray-50 border-gray-200";
-    }
+  const toggleRow = (id) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
   return (
     <div className="mb-8">
-      {/* Header */}
-      <div className="relative mb-12 py-20 w-full bg-[url('/img/background-image.png')] bg-cover bg-center">
-        <div className="relative z-10 max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <Typography variant="h2" className="font-bold text-white mb-4">
-                Leveransstatus
-              </Typography>
-              <Typography variant="lead" className="text-white/80">
-                Översikt över pågående leveranser och installationer
-              </Typography>
-            </div>
-            <div className="flex items-center gap-4">
-              <TruckIcon className="w-16 h-16 text-white/60" />
-            </div>
-          </div>
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-blue-900/40 to-purple-900/50"></div>
-      </div>
 
-      {/* Delivery Cards */}
-      <div className="max-w-7xl mx-auto px-6">
+      {/* Delivery Table */}
+      <div className="max-w-full mx-auto px-6">
         <div className="flex items-center justify-between mb-8">
           <Typography variant="h4" color="blue-gray" className="font-bold">
             Pågående Leveranser ({deliveries.length})
@@ -189,112 +161,179 @@ export function Leveransstatus() {
             <Spinner className="h-8 w-8" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {deliveries.map((delivery) => (
-              <Card key={delivery.id} className={`shadow-lg border-2 ${getListColor(delivery.listName)}`}>
-                <CardHeader className="relative h-16 bg-gradient-to-r from-blue-600 to-purple-600">
-                  <div className="absolute inset-0 flex items-center justify-between px-4">
-                    <Typography variant="h6" className="text-white font-bold truncate">
-                      {delivery.customer}
-                    </Typography>
-                    <Chip
-                      value={delivery.status}
-                      color={getStatusColor(delivery.status)}
-                      size="sm"
-                      className="text-xs"
-                    />
-                  </div>
-                </CardHeader>
-                
-                <CardBody className="p-4 space-y-3">
-                  {/* Företagsinfo */}
-                  <div className="flex items-center gap-2">
-                    <BuildingOfficeIcon className="w-4 h-4 text-blue-gray-500" />
-                    <Typography variant="small" className="font-semibold text-blue-gray-800">
-                      {delivery.company}
-                    </Typography>
-                  </div>
+          <Card className="overflow-hidden shadow-xl">
+            <CardBody className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-max table-auto">
+                  <thead>
+                    <tr className="bg-blue-gray-50">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
+                          
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
+                          Kund
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
+                          Modell
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
+                          Status
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
+                          Leveransdatum
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
+                          Säljare
+                        </Typography>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deliveries.map((delivery) => (
+                      <React.Fragment key={delivery.id}>
+                        {/* Main Row */}
+                        <tr className="hover:bg-gray-50 transition-colors">
+                          <td className="p-4 border-b border-blue-gray-50">
+                            <Button
+                              variant="text"
+                              size="sm"
+                              onClick={() => toggleRow(delivery.id)}
+                              className="p-1 hover:bg-blue-gray-50"
+                            >
+                              {expandedRows[delivery.id] ? (
+                                <ChevronUpIcon className="h-4 w-4" />
+                              ) : (
+                                <ChevronDownIcon className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </td>
+                          <td className="p-4 border-b border-blue-gray-50">
+                            <Typography variant="small" color="blue-gray" className="font-semibold">
+                              {delivery.customer}
+                            </Typography>
+                          </td>
+                          <td className="p-4 border-b border-blue-gray-50">
+                            <Typography variant="small" color="blue-gray">
+                              {delivery.model || '-'}
+                            </Typography>
+                          </td>
+                          <td className="p-4 border-b border-blue-gray-50">
+                            <Chip
+                              value={delivery.status}
+                              color={getStatusColor(delivery.status)}
+                              size="sm"
+                              className="text-xs"
+                            />
+                          </td>
+                          <td className="p-4 border-b border-blue-gray-50">
+                            <Typography variant="small" color="blue-gray">
+                              {delivery.desiredDate || '-'}
+                            </Typography>
+                          </td>
+                          <td className="p-4 border-b border-blue-gray-50">
+                            <Typography variant="small" color="blue-gray">
+                              {delivery.seller || '-'}
+                            </Typography>
+                          </td>
+                        </tr>
+                        
+                        {/* Expanded Details Row */}
+                        <tr>
+                          <td colSpan="6" className="p-0 border-b border-blue-gray-50">
+                            <Collapse open={expandedRows[delivery.id]}>
+                              <div className="bg-blue-gray-50/50 p-6 border-l-4 border-blue-500">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  {/* Företagsinformation */}
+                                  <div className="space-y-2">
+                                    <Typography variant="small" className="font-bold text-blue-gray-700">
+                                      Företagsinformation
+                                    </Typography>
+                                    <div className="flex items-center gap-2">
+                                      <BuildingOfficeIcon className="w-4 h-4 text-blue-gray-500" />
+                                      <Typography variant="small" className="text-blue-gray-600">
+                                        {delivery.company}
+                                      </Typography>
+                                    </div>
+                                    {delivery.address && (
+                                      <div className="flex items-start gap-2">
+                                        <TruckIcon className="w-4 h-4 text-blue-gray-500 mt-0.5" />
+                                        <Typography variant="small" className="text-blue-gray-600">
+                                          {delivery.address}
+                                        </Typography>
+                                      </div>
+                                    )}
+                                  </div>
 
-                  {/* Modell */}
-                  {delivery.model && (
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <Typography variant="small" className="font-medium text-blue-gray-700">
-                        Modell: {delivery.model}
-                      </Typography>
-                    </div>
-                  )}
+                                  {/* Kontaktinformation */}
+                                  <div className="space-y-2">
+                                    <Typography variant="small" className="font-bold text-blue-gray-700">
+                                      Kontaktinformation
+                                    </Typography>
+                                    {delivery.email && (
+                                      <div className="flex items-center gap-2">
+                                        <EnvelopeIcon className="w-4 h-4 text-blue-600" />
+                                        <a
+                                          href={`mailto:${delivery.email}`}
+                                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                                        >
+                                          <Typography variant="small">
+                                            {delivery.email}
+                                          </Typography>
+                                        </a>
+                                      </div>
+                                    )}
+                                    {delivery.phone && (
+                                      <div className="flex items-center gap-2">
+                                        <PhoneIcon className="w-4 h-4 text-green-600" />
+                                        <a
+                                          href={`tel:${delivery.phone}`}
+                                          className="text-green-600 hover:text-green-800 transition-colors"
+                                        >
+                                          <Typography variant="small">
+                                            {delivery.phone}
+                                          </Typography>
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
 
-                  {/* Leveransadress */}
-                  {delivery.address && (
-                    <div className="flex items-start gap-2">
-                      <TruckIcon className="w-4 h-4 text-blue-gray-500 mt-0.5" />
-                      <Typography variant="small" className="text-blue-gray-600">
-                        {delivery.address}
-                      </Typography>
-                    </div>
-                  )}
-
-                  {/* Önskat datum */}
-                  {delivery.desiredDate && (
-                    <div className="flex items-center gap-2">
-                      <CalendarDaysIcon className="w-4 h-4 text-blue-gray-500" />
-                      <Typography variant="small" className="text-blue-gray-600">
-                        Leverans: {delivery.desiredDate}
-                      </Typography>
-                    </div>
-                  )}
-
-                  {/* Säljare */}
-                  {delivery.seller && (
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-4 h-4 text-blue-gray-500" />
-                      <Typography variant="small" className="text-blue-gray-600">
-                        Säljare: {delivery.seller}
-                      </Typography>
-                    </div>
-                  )}
-
-                  {/* Kontaktinfo */}
-                  <div className="flex items-center gap-4 pt-2">
-                    {delivery.email && (
-                      <a
-                        href={`mailto:${delivery.email}`}
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
-                      >
-                        <EnvelopeIcon className="w-4 h-4" />
-                        <Typography variant="small">E-post</Typography>
-                      </a>
-                    )}
-                    {delivery.phone && (
-                      <a
-                        href={`tel:${delivery.phone}`}
-                        className="flex items-center gap-1 text-green-600 hover:text-green-800 transition-colors"
-                      >
-                        <PhoneIcon className="w-4 h-4" />
-                        <Typography variant="small">Ring</Typography>
-                      </a>
-                    )}
-                  </div>
-
-                  {/* Beskrivning */}
-                  {delivery.description && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <Typography variant="small" className="text-blue-gray-600 italic">
-                        {delivery.description}
-                      </Typography>
-                    </div>
-                  )}
-
-                  {/* Status lista */}
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <Typography variant="small" className="font-medium text-blue-gray-500">
-                      Status: {delivery.listName}
-                    </Typography>
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
+                                  {/* Status och anteckningar */}
+                                  <div className="space-y-2">
+                                    <Typography variant="small" className="font-bold text-blue-gray-700">
+                                      Status och anteckningar
+                                    </Typography>
+                                    <Typography variant="small" className="text-blue-gray-600">
+                                      <strong>Status:</strong> {delivery.listName}
+                                    </Typography>
+                                    {delivery.description && (
+                                      <Typography variant="small" className="text-blue-gray-600 italic">
+                                        <strong>Anteckningar:</strong> {delivery.description}
+                                      </Typography>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </Collapse>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </Card>
         )}
 
         {!loading && deliveries.length === 0 && (
