@@ -46,9 +46,9 @@ export function Leveransstatus() {
   };
 
   return (
-    <div className="mb-8 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+    <div className="mb-8">
 
-      <div className="max-w-none mx-auto px-6 flex flex-col gap-12">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col gap-12">
         <div className="flex items-center justify-between mb-8">
           <Typography variant="h4" color="blue-gray" className="font-bold">
             Pågående Leveranser ({deliveries.length})
@@ -74,35 +74,35 @@ export function Leveransstatus() {
           <Card className="overflow-hidden shadow-xl">
             <CardBody className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-max table-auto">
+                <table className="w-full table-fixed">
                   <thead>
                     <tr className="bg-blue-gray-50">
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/3">
                         <Typography variant="small" color="blue-gray" className="font-bold uppercase">
                           Kund
                         </Typography>
                       </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/6">
                         <Typography variant="small" color="blue-gray" className="font-bold uppercase">
                           Modell
                         </Typography>
                       </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/6">
                         <Typography variant="small" color="blue-gray" className="font-bold uppercase">
                           Status
                         </Typography>
                       </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/6">
                         <Typography variant="small" color="blue-gray" className="font-bold uppercase">
                           Leveransdatum
                         </Typography>
                       </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/6">
                         <Typography variant="small" color="blue-gray" className="font-bold uppercase">
                           Säljare
                         </Typography>
                       </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-12">
                         <Typography variant="small" color="blue-gray" className="font-bold uppercase">
                           
                         </Typography>
@@ -114,17 +114,17 @@ export function Leveransstatus() {
                       <React.Fragment key={delivery.id}>
                         {/* Main Row */}
                         <tr className="hover:bg-gray-50 transition-colors">
-                          <td className="p-4 border-b border-blue-gray-50">
-                            <Typography variant="small" color="blue-gray" className="font-semibold">
+                          <td className="p-3 border-b border-blue-gray-50 truncate">
+                            <Typography variant="small" color="blue-gray" className="font-semibold truncate">
                               {delivery.customer}
                             </Typography>
                           </td>
-                          <td className="p-4 border-b border-blue-gray-50">
-                            <Typography variant="small" color="blue-gray">
+                          <td className="p-3 border-b border-blue-gray-50 truncate">
+                            <Typography variant="small" color="blue-gray" className="truncate">
                               {delivery.model || '-'}
                             </Typography>
                           </td>
-                          <td className="p-4 border-b border-blue-gray-50">
+                          <td className="p-3 border-b border-blue-gray-50">
                             <Chip
                               value={delivery.status}
                               color={getStatusColor(delivery.status)}
@@ -132,17 +132,17 @@ export function Leveransstatus() {
                               className="text-xs"
                             />
                           </td>
-                          <td className="p-4 border-b border-blue-gray-50">
-                            <Typography variant="small" color="blue-gray">
+                          <td className="p-3 border-b border-blue-gray-50 truncate">
+                            <Typography variant="small" color="blue-gray" className="truncate">
                               {delivery.desiredDate || '-'}
                             </Typography>
                           </td>
-                          <td className="p-4 border-b border-blue-gray-50">
-                            <Typography variant="small" color="blue-gray">
+                          <td className="p-3 border-b border-blue-gray-50 truncate">
+                            <Typography variant="small" color="blue-gray" className="truncate">
                               {delivery.seller || '-'}
                             </Typography>
                           </td>
-                          <td className="p-4 border-b border-blue-gray-50">
+                          <td className="p-3 border-b border-blue-gray-50">
                             <Button
                               variant="text"
                               size="sm"

@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 
 // Trello API credentials
-const API_KEY = import.meta.env.VITE_TRELLO_API_KEY || '1f48fee44785efe725261258dde637b3';
-const TOKEN = import.meta.env.VITE_TRELLO_TOKEN || 'ATTA8955a18635a39ccb420312442a150c7989a93a9606b0898c5a42af995cdbb3dc36808671';
+const API_KEY = import.meta.env.VITE_TRELLO_API_KEY;
+const TOKEN = import.meta.env.VITE_TRELLO_TOKEN;
 const BOARD_ID = '5vaVervN'; // Extracted from URL
 
 // Trello API base URL
