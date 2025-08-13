@@ -1,0 +1,15 @@
+{
+  "name": "team8-webapp-api",
+  "version": "1.0.0",
+  "description": "Azure Functions for Team8 Webapp",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "google-auth-library": "^9.0.0"
+  },
+  "devDependencies": {},
+  "author": "Team8",
+  "license": "ISC"
+}
