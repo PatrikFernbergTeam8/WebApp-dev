@@ -2,8 +2,8 @@ name: Daily Cleanup of Expired Reservations
 
 on:
   schedule:
-    # Run daily at 09:00 UTC (10:00 CET, 11:00 CEST)
-    - cron: '0 9 * * *'
+    # Run daily at 13:00 UTC (14:00 CET, 15:00 CEST)
+    - cron: '0 13 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
