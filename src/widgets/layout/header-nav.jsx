@@ -50,15 +50,8 @@ export function HeaderNav({ brandName, routes }) {
     >
       <div className="relative flex items-center justify-between px-4 py-2">
         
-        {/* Left: Logo and Brand */}
+        {/* Left: Empty space for layout */}
         <div className="flex items-center gap-4">
-          <Link to="/dashboard/tables" className="flex items-center gap-3">
-            <img 
-              src="/img/logo_svart.png" 
-              alt="Logo" 
-              className="h-10 w-auto object-contain"
-            />
-          </Link>
         </div>
 
         {/* Center: Desktop Navigation - Absolutely positioned */}
