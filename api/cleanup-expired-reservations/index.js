@@ -1,13 +1,19 @@
 const { GoogleAuth } = require('google-auth-library');
 
-module.exports = async function (context, myTimer) {
+module.exports = async function (context, req) {
     const timeStamp = new Date().toISOString();
     
-    if (myTimer.IsPastDue) {
-        context.log('Timer function is running late!');
-    }
+    context.log('JavaScript HTTP trigger function started at', timeStamp);
 
-    context.log('JavaScript timer trigger function started at', timeStamp);
+    // Simple authentication check - you can make this more secure
+    const authKey = req.headers['x-auth-key'];
+    if (authKey !== process.env.CLEANUP_AUTH_KEY) {
+        context.res = {
+            status: 401,
+            body: 'Unauthorized'
+        };
+        return;
+    }
 
     try {
         // Google Sheets configuration
@@ -23,12 +29,30 @@ module.exports = async function (context, myTimer) {
         
         context.log(`Cleanup completed. Removed ${expiredCount} expired reservations.`);
         
+        context.res = {
+            status: 200,
+            body: {
+                success: true,
+                message: `Cleanup completed successfully. Removed ${expiredCount} expired reservations.`,
+                timestamp: timeStamp,
+                expiredCount: expiredCount
+            }
+        };
+        
     } catch (error) {
         context.log.error('Error during cleanup:', error);
-        throw error;
+        
+        context.res = {
+            status: 500,
+            body: {
+                success: false,
+                error: error.message,
+                timestamp: timeStamp
+            }
+        };
     }
 
-    context.log('JavaScript timer trigger function completed at', timeStamp);
+    context.log('JavaScript HTTP trigger function completed at', timeStamp);
 };
 
 /**
