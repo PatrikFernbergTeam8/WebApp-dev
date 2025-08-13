@@ -11,106 +11,17 @@ import { ArrowPathIcon, TruckIcon, PhoneIcon, EnvelopeIcon, ChevronDownIcon, Che
 import { CalendarDaysIcon, BuildingOfficeIcon, UserIcon } from "@heroicons/react/24/solid";
 import React, { useState, useEffect } from "react";
 
+// Import Trello service
+import { useTrelloData } from "@/services/trelloService";
+
 export function Leveransstatus() {
-  const [deliveries, setDeliveries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
+  
+  // Use Trello data hook
+  const { data: trelloDeliveries, loading, error, refetch } = useTrelloData();
 
-  // Mock data baserat på Trello-strukturen
-  const mockDeliveries = [
-    {
-      id: "1",
-      customer: "Spirande Lärande i Täby AB",
-      company: "Spirande Lärande i Täby AB",
-      model: "Epson AM-C4000 3st",
-      address: "Eskadervägen 10",
-      status: "Nybeställning",
-      priority: "Övriga",
-      desiredDate: "4 augusti",
-      seller: "Michael Wreming",
-      email: "hr@spiraskolan.se",
-      phone: "0760043231",
-      description: "SMTP: Ta reda på kundens SMTP-uppgifter",
-      listName: "Ny leverans skapad"
-    },
-    {
-      id: "2", 
-      customer: "Svenska Mäklarhuset Haninge",
-      company: "Svenska Mäklarhuset Haninge",
-      model: "Ricoh",
-      address: "",
-      status: "Beställd",
-      priority: "Övriga",
-      desiredDate: "",
-      seller: "",
-      email: "",
-      phone: "",
-      description: "",
-      listName: "Uppstartsmöte bokat"
-    },
-    {
-      id: "3",
-      customer: "CONVICTUS",
-      company: "CONVICTUS", 
-      model: "Ricoh",
-      address: "",
-      status: "Begagnad",
-      priority: "Ricoh",
-      desiredDate: "2025-08-22",
-      seller: "",
-      email: "",
-      phone: "",
-      description: "Länsfast Ludvika",
-      listName: "Skrivare hos Safe och Prel. leveransdatum bokat"
-    },
-    {
-      id: "4",
-      customer: "Part Precision Sweden AB",
-      company: "Part Precision Sweden AB",
-      model: "",
-      address: "",
-      status: "Bokat&Klart",
-      priority: "Begagnad",
-      desiredDate: "2025-08-15",
-      seller: "",
-      email: "",
-      phone: "",
-      description: "Epson",
-      listName: "Leveransdatum bekräftat"
-    },
-    {
-      id: "5",
-      customer: "Sjöbogården",
-      company: "Sjöbogården",
-      model: "",
-      address: "",
-      status: "Begagnad",
-      priority: "Epson",
-      desiredDate: "2025-07-29",
-      seller: "",
-      email: "",
-      phone: "",
-      description: "",
-      listName: "Eftermarknad"
-    }
-  ];
-
-  useEffect(() => {
-    // Simulera API-anrop
-    setTimeout(() => {
-      setDeliveries(mockDeliveries);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  const refetch = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setDeliveries(mockDeliveries);
-      setLoading(false);
-    }, 1000);
-  };
+  // Use Trello data or fallback to empty array
+  const deliveries = trelloDeliveries || [];
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
