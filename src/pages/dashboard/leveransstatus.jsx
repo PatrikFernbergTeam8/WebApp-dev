@@ -138,7 +138,7 @@ export function Leveransstatus() {
     <div className="mb-8">
 
       {/* Delivery Table */}
-      <div className="max-w-full mx-auto px-6">
+      <div className="max-w-8xl mx-auto px-6">
         <div className="flex items-center justify-between mb-8">
           <Typography variant="h4" color="blue-gray" className="font-bold">
             Pågående Leveranser ({deliveries.length})
@@ -169,11 +169,6 @@ export function Leveransstatus() {
                     <tr className="bg-blue-gray-50">
                       <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
                         <Typography variant="small" color="blue-gray" className="font-bold uppercase">
-                          
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
-                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
                           Kund
                         </Typography>
                       </th>
@@ -197,6 +192,11 @@ export function Leveransstatus() {
                           Säljare
                         </Typography>
                       </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4 text-left">
+                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
+                          
+                        </Typography>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -204,20 +204,6 @@ export function Leveransstatus() {
                       <React.Fragment key={delivery.id}>
                         {/* Main Row */}
                         <tr className="hover:bg-gray-50 transition-colors">
-                          <td className="p-4 border-b border-blue-gray-50">
-                            <Button
-                              variant="text"
-                              size="sm"
-                              onClick={() => toggleRow(delivery.id)}
-                              className="p-1 hover:bg-blue-gray-50"
-                            >
-                              {expandedRows[delivery.id] ? (
-                                <ChevronUpIcon className="h-4 w-4" />
-                              ) : (
-                                <ChevronDownIcon className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </td>
                           <td className="p-4 border-b border-blue-gray-50">
                             <Typography variant="small" color="blue-gray" className="font-semibold">
                               {delivery.customer}
@@ -245,6 +231,20 @@ export function Leveransstatus() {
                             <Typography variant="small" color="blue-gray">
                               {delivery.seller || '-'}
                             </Typography>
+                          </td>
+                          <td className="p-4 border-b border-blue-gray-50">
+                            <Button
+                              variant="text"
+                              size="sm"
+                              onClick={() => toggleRow(delivery.id)}
+                              className="p-1 hover:bg-blue-gray-50"
+                            >
+                              {expandedRows[delivery.id] ? (
+                                <ChevronUpIcon className="h-4 w-4" />
+                              ) : (
+                                <ChevronDownIcon className="h-4 w-4" />
+                              )}
+                            </Button>
                           </td>
                         </tr>
                         
