@@ -7,7 +7,7 @@ import {
   Spinner,
   Collapse,
 } from "@material-tailwind/react";
-import { ArrowPathIcon, TruckIcon, PhoneIcon, EnvelopeIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import { TruckIcon, PhoneIcon, EnvelopeIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { CalendarDaysIcon, BuildingOfficeIcon, UserIcon } from "@heroicons/react/24/solid";
 import React, { useState, useEffect } from "react";
 
@@ -49,21 +49,10 @@ export function Leveransstatus() {
     <div className="mb-8">
 
       <div className="max-w-7xl mx-auto px-6 flex flex-col gap-12">
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8">
           <Typography variant="h4" color="blue-gray" className="font-bold">
             Pågående Leveranser ({deliveries.length})
           </Typography>
-          <Button
-            variant="outlined"
-            color="blue-gray"
-            size="sm"
-            onClick={refetch}
-            disabled={loading}
-            className="flex items-center gap-2"
-          >
-            <ArrowPathIcon className="h-4 w-4" />
-            Uppdatera
-          </Button>
         </div>
 
         {loading ? (
