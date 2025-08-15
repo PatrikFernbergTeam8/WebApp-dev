@@ -64,40 +64,6 @@ export function Leveransstatus() {
             <CardBody className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full table-fixed">
-                  <thead>
-                    <tr className="bg-blue-gray-50">
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/3">
-                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
-                          Kund
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/6">
-                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
-                          Modell
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/6">
-                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
-                          Status
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/6">
-                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
-                          Leveransdatum
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-1/6">
-                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
-                          Säljare
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 text-left w-12">
-                        <Typography variant="small" color="blue-gray" className="font-bold uppercase">
-                          
-                        </Typography>
-                      </th>
-                    </tr>
-                  </thead>
                   <tbody>
                     {deliveries.map((delivery) => (
                       <React.Fragment key={delivery.id}>
