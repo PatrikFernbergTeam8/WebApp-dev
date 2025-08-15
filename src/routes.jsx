@@ -1,9 +1,8 @@
 import {
   RectangleStackIcon,
   PrinterIcon,
-  TruckIcon,
 } from "@heroicons/react/24/solid";
-import { Tables, Leveransstatus } from "@/pages/dashboard";
+import { Tables } from "@/pages/dashboard";
 import { SignUp } from "@/pages/auth";
 
 const icon = {
@@ -19,12 +18,6 @@ export const routes = [
         name: "lagerstatus",
         path: "/tables",
         element: <Tables />,
-      },
-      {
-        icon: <TruckIcon {...icon} />,
-        name: "leveransstatus",
-        path: "/leveransstatus",
-        element: <Leveransstatus />,
       },
     ],
   },
