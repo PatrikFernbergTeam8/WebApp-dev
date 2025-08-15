@@ -2,7 +2,6 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 import { IconButton } from "@material-tailwind/react";
 import {
-  HeaderNav,
   Configurator,
   Footer,
 } from "@/widgets/layout";
@@ -17,7 +16,6 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-blue-gray-50/50">
-      <HeaderNav routes={routes} />
       <Configurator />
       {isFullWidthPage ? (
         // Full-width pages without container constraints
